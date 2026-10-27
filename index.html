@@ -6,7 +6,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0f0d13">
 <!-- build.ps1 fills in a fingerprint of this version; the app compares it to spot updates. -->
-<meta name="app-build" content="c9b4b75b">
+<meta name="app-build" content="86a03e5e">
 <title>Planes of Nothingness</title>
 <!-- Home-screen app setup (used when served from GitHub Pages). -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -738,11 +738,19 @@ function updateControls() {
   $("page-count").textContent = atEnd ? "The end" : `${state.index + 1} / ${total}`;
   slider.value = String(Math.min(state.index + 1, total));
   $("prev").disabled = state.index === 0;
-  $("next").disabled = atEnd;
+  // On the end card, the Next arrow carries on into the next episode (if there is one).
+  $("next").disabled = atEnd && !state.episode.next;
+  $("next").setAttribute("aria-label", atEnd ? "Next episode" : "Next page");
   if (atEnd) showChrome(true);
 }
 
-const next = () => goTo(state.index + 1);
+function next() {
+  if (state.index >= lastIndex()) {
+    if (state.episode.next) location.hash = state.episode.next.id;
+    return;
+  }
+  goTo(state.index + 1);
+}
 const prev = () => goTo(state.index - 1);
 
 function showChrome(visible) {
