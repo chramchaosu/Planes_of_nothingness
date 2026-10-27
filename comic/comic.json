@@ -26,6 +26,28 @@
             { "file": "15.jpg", "text": "Even the possibility that the parasite" },
             { "file": "16.jpg", "text": "Is you" }
           ]
+        },
+        {
+          "number": 2,
+          "folder": "episode-02",
+          "pages": [
+            { "file": "01.jpg", "text": "In The Planes of Nothingness" },
+            { "file": "02.jpg", "text": "There is this strange peace" },
+            { "file": "03.jpg", "text": "And despite there is nothing to look at or sense in any other way..." },
+            { "file": "04.jpg", "text": "You still feel the time passing by." },
+            { "file": "05.jpg", "text": "Flow of the time..." },
+            { "file": "06.jpg", "text": "...and light." },
+            { "file": "07.jpg", "text": "And you begin to realize that the only thing necessary to feel the flow of the time is the light." },
+            { "file": "08.jpg", "text": "Your light." },
+            { "file": "09.jpg", "text": "And the realization of the source of this strange peace is even more surprising" },
+            { "file": "10.jpg", "text": "As there is nothing to look at, to sense, to keep..." },
+            { "file": "11.jpg", "text": "...there is nothing to control, either. Only light and presence to sense." },
+            { "file": "12.jpg", "text": "These are The Planes of Nothingness after all." },
+            { "file": "13.jpg", "text": "And as you enjoy peace, light and time..." },
+            { "file": "14.jpg", "text": "...you start to feel the disturbance." },
+            { "file": "15.jpg", "text": "It is the people trying to save you..." },
+            { "file": "16.jpg", "text": "...from Nothing." }
+          ]
         }
       ]
     }
