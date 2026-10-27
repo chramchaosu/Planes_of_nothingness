@@ -550,7 +550,7 @@ function renderHome() {
             el("div", { className: "episode-body" },
               ...(episode.title ? [el("span", { className: "episode-number" }, `Episode ${episode.number}`)] : []),
               el("h3", { className: "episode-name" }, episode.title ?? `Episode ${episode.number}`),
-              el("span", { className: "episode-meta" }, `${episode.pages.length} pages`),
+              el("span", { className: "episode-meta" }, episode.pages.length === 1 ? "1 page" : `${episode.pages.length} pages`),
               el("span", { className: "episode-status" }, statusText(episode)),
             ),
             chevron(),
