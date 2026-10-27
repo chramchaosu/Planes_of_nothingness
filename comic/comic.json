@@ -181,6 +181,14 @@
           "pages": [
             { "file": "01.jpg", "text": "Two snakes, one violet and one green, coil around each other in a spiral against a starry purple sky. Their heads meet at the top in the shape of a heart, tongues twining together, and glowing lights of yellow, pink and red shine inside the loops of their bodies." }
           ]
+        },
+        {
+          "number": 14,
+          "title": "Bol tam niekto z Vás?",
+          "folder": "episode-14",
+          "pages": [
+            { "file": "01.jpg", "text": "A sketchbook page covered in looping violet ballpoint lines that curve out from the middle and back again, like two great wings or the field lines of a magnet. Across the centre: \"Bol tam niekto z Vás?\" (Has any of you been there?) Signed \"27. 8. 2025, VeVe\"." }
+          ]
         }
       ]
     }
