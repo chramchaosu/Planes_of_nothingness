@@ -160,13 +160,13 @@
     object-fit: cover;
     object-position: 50% 35%;
   }
-  /* Darkens the lower left of the picture so the text stays readable on any page. */
+  /* Darkens only the strip behind the text, so the rest of the picture stays at full brightness. */
   .episode::after {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(to top, rgb(15 13 19 / 0.92) 0%, rgb(15 13 19 / 0.55) 45%, rgb(15 13 19 / 0.05) 100%);
+    background: linear-gradient(to top, rgb(15 13 19 / 0.85) 0%, rgb(15 13 19 / 0.5) 35%, rgb(15 13 19 / 0) 60%);
   }
   .episode-body {
     display: grid;
@@ -207,7 +207,19 @@
 
   /* ---------- Reader ---------- */
 
-  .reader { position: fixed; inset: 0; background: var(--ink); }
+  /* The pictures sit between the bars, never underneath them.
+     When the bars are hidden, the pictures get the whole screen. */
+  .reader {
+    --stage-top: calc(var(--bar-h) + env(safe-area-inset-top, 0px));
+    --stage-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px));
+    position: fixed;
+    inset: 0;
+    background: var(--ink);
+  }
+  .reader.chrome-hidden {
+    --stage-top: env(safe-area-inset-top, 0px);
+    --stage-bottom: env(safe-area-inset-bottom, 0px);
+  }
 
   .bar {
     position: fixed;
@@ -294,7 +306,10 @@
 
   .stage {
     position: absolute;
-    inset: 0;
+    top: var(--stage-top);
+    bottom: var(--stage-bottom);
+    left: 0;
+    right: 0;
     overscroll-behavior: contain;
   }
 
@@ -305,9 +320,6 @@
     align-items: center;
     gap: 10px;
     overflow-y: auto;
-    padding-top: calc(var(--bar-h) + env(safe-area-inset-top, 0px));
-    padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px));
-    scroll-padding-top: calc(var(--bar-h) + env(safe-area-inset-top, 0px));
   }
   .reader[data-mode="scroll"] .page { width: min(100%, 760px); flex: none; }
   .reader[data-mode="scroll"] .page img { width: 100%; height: auto; }
@@ -315,8 +327,7 @@
   /* Pages mode: one page at a time, fitted to the screen. */
   .reader[data-mode="pages"] .stage {
     overflow: hidden;
-    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
-             env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
     touch-action: pinch-zoom;
     user-select: none;
     -webkit-user-select: none;
@@ -393,7 +404,8 @@
     <section class="how-to" aria-labelledby="how-to-title">
       <h2 id="how-to-title">How to read</h2>
       <p><strong>Scroll</strong> shows the whole episode as one long strip. Just keep scrolling down.</p>
-      <p><strong>Pages</strong> shows one page at a time. Swipe, or tap the right or left edge to turn the page. Tap the middle to hide the bars.</p>
+      <p><strong>Pages</strong> shows one page at a time. Swipe, or tap the right or left edge to turn the page.</p>
+      <p>Tap the middle of a picture to hide the bars and give it the whole screen. Tap again to bring them back. Wide pictures look biggest with the phone turned sideways.</p>
       <p>Every episode opens on its first page. Episodes you've read to the end are marked as finished.</p>
     </section>
   </div>
@@ -634,10 +646,8 @@ function goTo(index, { smooth = true, scroll = true } = {}) {
   }
 
   if (scroll && state.mode === "scroll") {
-    // The top padding keeps the page clear of the top bar.
-    const topPadding = parseFloat(getComputedStyle(stage).paddingTop) || 0;
     stage.scrollTo({
-      top: slots()[state.index].offsetTop - topPadding,
+      top: slots()[state.index].offsetTop,
       behavior: smooth && !prefersReducedMotion() ? "smooth" : "auto",
     });
   }
@@ -661,13 +671,18 @@ const next = () => goTo(state.index + 1);
 const prev = () => goTo(state.index - 1);
 
 function showChrome(visible) {
+  // Showing or hiding the bars moves the top edge of the reading area.
+  // In scroll mode, shift the strip by the same amount so the picture stays put.
+  const topBefore = stage.getBoundingClientRect().top;
   reader.classList.toggle("chrome-hidden", !visible);
+  if (state.mode === "scroll") {
+    stage.scrollTop += stage.getBoundingClientRect().top - topBefore;
+  }
 }
 const toggleChrome = () => showChrome(reader.classList.contains("chrome-hidden"));
 
-// In scroll mode, work out which page is in the middle of the screen,
-// and slide the bars away while scrolling down so the art gets the full screen.
-let lastScrollTop = 0;
+// In scroll mode, work out which page is in the middle of the screen.
+// (The bars stay until the reader taps; hiding them by themselves would make the strip jump.)
 let scrollFrame = 0;
 stage.addEventListener("scroll", () => {
   if (state.mode !== "scroll" || scrollFrame) return;
@@ -677,11 +692,6 @@ stage.addEventListener("scroll", () => {
     let index = 0;
     Array.from(slots()).forEach((slot, i) => { if (slot.offsetTop <= middle) index = i; });
     if (index !== state.index) goTo(index, { scroll: false });
-
-    const delta = stage.scrollTop - lastScrollTop;
-    if (delta > 12 && stage.scrollTop > 80) showChrome(false);
-    else if (delta < -12) showChrome(true);
-    lastScrollTop = stage.scrollTop;
   });
 }, { passive: true });
 
