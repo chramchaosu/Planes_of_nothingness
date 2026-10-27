@@ -224,6 +224,14 @@
           "pages": [
             { "file": "01.jpg", "text": "A black and red spiral like a whirlpool, scattered with scribbled stars and a pale crescent moon. The words \"Come disappear\" in shaky white and red letters run around the spiral toward its centre, then come back out upside down." }
           ]
+        },
+        {
+          "number": 19,
+          "title": "Gemini season",
+          "folder": "episode-19",
+          "pages": [
+            { "file": "01.jpg", "text": "A mirror-image night scene under a smiling pale moon and two four-pointed stars. On two tall magenta peaks sit two small figures, one in a wide hat, each holding a ribbon-like ladder that winds down the slopes. Between the peaks a glowing figure stands with arms raised, and below it the two ribbons twist around each other like a double helix and cross in an X." }
+          ]
         }
       ]
     }
