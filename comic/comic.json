@@ -112,6 +112,17 @@
             { "file": "03.jpg", "text": "A burning orange star streaks across the purple sky over grass and stones by a stream. \"You would destroy the world just to get rid of me?\" \"Of course. They are my words.\"" },
             { "file": "04.jpg", "text": "A swirl of violet, pink and blue specks, like a nebula. \"I can build how many I want.\"" }
           ]
+        },
+        {
+          "number": 8,
+          "title": "Creation and creativity come from the same source.",
+          "folder": "episode-08",
+          "pages": [
+            { "file": "01.jpg", "text": "Two sets of pink, ring-like shapes interlock at the centre like clasped hands, on a mossy green background. \"Connection to the point of creation\"" },
+            { "file": "02.jpg", "text": "Waves of pink and bright green brushstrokes sweep across the picture. \"The erotic pull\"" },
+            { "file": "03.jpg", "text": "Two arrows, one with a green tip and one with a pink tip, meet point to point in a burst of light against a blue sky. \"The touch of two arrows that were pointing at each other.\"" },
+            { "file": "04.jpg", "text": "A small green sprout with a pink bud rises from brown earth above a layer of turquoise water. \"The seed reaching the hidden water source and growing again.\"" }
+          ]
         }
       ]
     }
