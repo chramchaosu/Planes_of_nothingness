@@ -558,6 +558,7 @@ function openEpisode(episode) {
           alt: `Page ${i + 1}: ${page.text}`,
           width: page.width,
           height: page.height,
+          loading: "lazy",
           decoding: "async",
           draggable: false,
         }),
@@ -605,6 +606,11 @@ function goTo(index, { smooth = true, scroll = true } = {}) {
   state.index = Math.min(Math.max(0, index), lastIndex());
 
   Array.from(slots()).forEach((slot, i) => slot.classList.toggle("is-current", i === state.index));
+
+  // Fetch this page and the next one now, so turning the page doesn't wait for a download.
+  for (const i of [state.index, state.index + 1]) {
+    slots()[i]?.querySelector("img")?.setAttribute("loading", "eager");
+  }
 
   if (scroll && state.mode === "scroll") {
     // The top padding keeps the page clear of the top bar.
@@ -748,11 +754,41 @@ route();
 
 // ---------- Offline copy and automatic updates (website only) ----------
 
-// A downloaded copy opened from the phone's files can't use this, and doesn't need it.
+// Must match PAGES_CACHE in sw.js.
+const PAGES_CACHE = "planes-of-nothingness-pages";
+
 if ("serviceWorker" in navigator && location.protocol === "https:") {
-  navigator.serviceWorker.register("sw.js").catch(() => {
-    // Not available here (for example in a preview). The comic still works online.
-  });
+  navigator.serviceWorker.register("sw.js")
+    .then(savePagesForOffline)
+    .catch(() => {
+      // Not available here (for example in a preview). The comic still works online.
+    });
+}
+
+/**
+ * Downloads every comic page the phone doesn't have yet, one at a time in the
+ * background, and forgets pages that are no longer part of the comic.
+ */
+async function savePagesForOffline() {
+  const cache = await caches.open(PAGES_CACHE);
+  const wanted = new Set(episodes.flatMap((episode) =>
+    episode.pages.map((page) => new URL(page.src, location.href).href)));
+
+  const saved = new Set();
+  for (const request of await cache.keys()) {
+    if (wanted.has(request.url)) saved.add(request.url);
+    else await cache.delete(request);
+  }
+
+  for (const url of wanted) {
+    if (saved.has(url)) continue;
+    try {
+      const response = await fetch(url);
+      if (response.ok) await cache.put(url, response);
+    } catch {
+      return; // Offline right now; the rest is saved next time the app opens.
+    }
+  }
 }
 </script>
 </body>

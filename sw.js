@@ -4,15 +4,22 @@
  * Service worker: lets the app open without internet once it has been loaded
  * from its web address (GitHub Pages).
  *
- * Strategy: "network first, with a time limit". When online, the newest
- * version is fetched and a copy is kept, so new episodes arrive on their own.
- * If the network is missing or slow, the kept copy is shown instead and the
- * download carries on in the background for next time.
+ * The app itself (index.html, icons, ...) is "network first, with a time limit":
+ * when online, the newest version is fetched and a copy is kept, so new
+ * episodes arrive on their own. If the network is missing or slow, the kept
+ * copy is shown instead and the download carries on in the background.
  *
- * Change CACHE_NAME when the list of files below changes.
+ * Comic pictures (pages/...) are "saved copy first". Their file names contain
+ * a fingerprint of their contents, so a name never points to a different
+ * picture and a saved copy can't go out of date. The reader page fills this
+ * cache with every page in the background, so the whole comic works offline.
+ *
+ * Change CACHE_NAME when the list of APP_FILES below changes.
+ * PAGES_CACHE must match the name used in src/reader.html.
  */
 
-const CACHE_NAME = "planes-of-nothingness-v1";
+const CACHE_NAME = "planes-of-nothingness-v2";
+const PAGES_CACHE = "planes-of-nothingness-pages";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -28,18 +35,25 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Remove copies kept by older versions of this file.
+// Remove copies kept by older versions of this file (the saved pages stay).
 self.addEventListener("activate", (event) => {
+  const keep = new Set([CACHE_NAME, PAGES_CACHE]);
   event.waitUntil(
     caches.keys()
-      .then((names) => Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n))))
+      .then((names) => Promise.all(names.filter((n) => !keep.has(n)).map((n) => caches.delete(n))))
       .then(() => self.clients.claim()),
   );
 });
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
+  if (url.pathname.includes("/pages/")) {
+    event.respondWith(savedCopyFirst(request));
+    return;
+  }
 
   const fromNetwork = fetch(request).then((response) => {
     if (response.ok) {
@@ -53,6 +67,17 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(firstUsable(request, fromNetwork));
 });
+
+/** A comic picture: the saved copy if there is one, otherwise download and save it. */
+async function savedCopyFirst(request) {
+  const cache = await caches.open(PAGES_CACHE);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  if (response.ok) await cache.put(request, response.clone());
+  return response;
+}
 
 /** The network answer if it comes in time, otherwise the saved copy. */
 async function firstUsable(request, fromNetwork) {

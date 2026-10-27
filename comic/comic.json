@@ -84,6 +84,23 @@
             { "file": "03.jpg", "text": "The same forest at night, grey trunks and fireflies in blue-green grass. \"For how long?\"" },
             { "file": "04.jpg", "text": "The same forest at dawn, warm trunks under a violet sky. \"Until the stars fade away.\"" }
           ]
+        },
+        {
+          "number": 6,
+          "title": "Story",
+          "folder": "episode-06",
+          "pages": [
+            { "file": "01.jpg", "text": "Title page in black ink: \"Potoo vs Andal\", in big hand-drawn letters over scribbled bushes and grass." },
+            { "file": "02.jpg", "text": "Endless rows of sharp, cross-hatched mountain peaks under an empty sky." },
+            { "file": "03.jpg", "text": "A shaggy horse with a long dark mane looks out over the mountains." },
+            { "file": "04.jpg", "text": "The shaggy horse stands on a rocky ledge, looking over the sea of mountains." },
+            { "file": "05.jpg", "text": "The shaggy horse gallops through the valley, mane and tail flying, past bushes and boulders." },
+            { "file": "06.jpg", "text": "Another horse, with a neatly braided mane, looks over a wooden fence in front of a hedge." },
+            { "file": "07.jpg", "text": "The braided horse leans over the fence, while the shaggy horse appears on the other side of the hedge." },
+            { "file": "08.jpg", "text": "The braided horse stares wide-eyed as the shaggy horse sticks its tongue out at it over the fence." },
+            { "file": "09.jpg", "text": "The shaggy horse gallops away happily into the mountains, through the bushes." },
+            { "file": "10.jpg", "text": "The empty mountain landscape, with a few rocks and a path leading into the hills." }
+          ]
         }
       ]
     }
