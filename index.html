@@ -6,7 +6,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0f0d13">
 <!-- build.ps1 fills in a fingerprint of this version; the app compares it to spot updates. -->
-<meta name="app-build" content="86a03e5e">
+<meta name="app-build" content="16849586">
 <title>Planes of Nothingness</title>
 <!-- Home-screen app setup (used when served from GitHub Pages). -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -518,7 +518,10 @@ const episodes = comic.seasons.flatMap((season) =>
     label: `Season ${season.number} · Episode ${episode.number}`,
   })),
 );
-episodes.forEach((episode, i) => { episode.next = episodes[i + 1] ?? null; });
+episodes.forEach((episode, i) => {
+  episode.prev = episodes[i - 1] ?? null;
+  episode.next = episodes[i + 1] ?? null;
+});
 const episodesById = new Map(episodes.map((episode) => [episode.id, episode]));
 
 // ---------- Home ----------
@@ -585,6 +588,9 @@ const state = {
   index: 0, // 0..pages.length; the last index is the "end of episode" card
   mode: store.get(MODE_KEY, "scroll") === "pages" ? "pages" : "scroll",
 };
+// Set while stepping back from an episode's first page into the one before it,
+// so that one opens on its last page instead of its first.
+let steppingBackInto = null;
 
 const prefersReducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lastIndex = () => state.episode.pages.length;
@@ -592,8 +598,9 @@ const slots = () => stage.children;
 
 function openEpisode(episode) {
   state.episode = episode;
-  // Episodes always open on their first page.
-  state.index = 0;
+  // Episodes open on their first page, or on their last when stepping back into them.
+  state.index = steppingBackInto === episode ? episode.pages.length - 1 : 0;
+  steppingBackInto = null;
 
   $("reader-title").textContent = episode.label;
   document.title = `${comic.title} · ${episode.label}`;
@@ -737,8 +744,10 @@ function updateControls() {
   const atEnd = state.index >= total;
   $("page-count").textContent = atEnd ? "The end" : `${state.index + 1} / ${total}`;
   slider.value = String(Math.min(state.index + 1, total));
-  $("prev").disabled = state.index === 0;
-  // On the end card, the Next arrow carries on into the next episode (if there is one).
+  // On the first page the Previous arrow steps back into the episode before (if there is one),
+  // and on the end card the Next arrow carries on into the next one.
+  $("prev").disabled = state.index === 0 && !state.episode.prev;
+  $("prev").setAttribute("aria-label", state.index === 0 ? "Previous episode" : "Previous page");
   $("next").disabled = atEnd && !state.episode.next;
   $("next").setAttribute("aria-label", atEnd ? "Next episode" : "Next page");
   if (atEnd) showChrome(true);
@@ -751,7 +760,17 @@ function next() {
   }
   goTo(state.index + 1);
 }
-const prev = () => goTo(state.index - 1);
+
+function prev() {
+  if (state.index === 0) {
+    if (state.episode.prev) {
+      steppingBackInto = state.episode.prev;
+      location.hash = state.episode.prev.id;
+    }
+    return;
+  }
+  goTo(state.index - 1);
+}
 
 function showChrome(visible) {
   // Showing or hiding the bars moves the top edge of the reading area.
