@@ -325,7 +325,7 @@
   }
   .reader[data-mode="scroll"] .page { width: min(100%, 760px); flex: none; }
   .reader[data-mode="scroll"] .page :is(img, video) { width: 100%; height: auto; }
-  .reader[data-mode="scroll"] .next-episode,
+  .reader[data-mode="scroll"] :is(.prev-episode, .next-episode),
   .reader[data-mode="scroll"] .swipe-hint { display: none; }
 
   /* Pages mode: one page at a time, fitted to the screen. */
@@ -594,7 +594,24 @@ let steppingBackInto = null;
 
 const prefersReducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lastIndex = () => state.episode.pages.length;
-const slots = () => stage.children;
+// The episode's pages and its end card, numbered from 0. The previous episode's last page,
+// waiting before the first page in pages mode, is not one of them.
+const slots = () => stage.querySelectorAll(":scope > :not(.prev-episode)");
+
+/** Pages mode: a page of a neighbouring episode, shown at either end of the strip. */
+function renderPeek(className, page) {
+  return el("figure", { className: `slot page ${className}`, "aria-hidden": "true" },
+    el("img", {
+      src: page.src,
+      alt: "",
+      width: page.width,
+      height: page.height,
+      loading: "lazy",
+      decoding: "async",
+      draggable: false,
+    }),
+  );
+}
 
 function openEpisode(episode) {
   state.episode = episode;
@@ -607,6 +624,9 @@ function openEpisode(episode) {
   slider.max = String(episode.pages.length);
 
   stage.replaceChildren(
+    // Pages mode: the previous episode's last page waits before the first page, so swiping
+    // back carries straight into it (see openNeighbourIfReached).
+    ...(episode.prev ? [renderPeek("prev-episode", episode.prev.pages.at(-1))] : []),
     ...episode.pages.map((page, i) =>
       el("figure", { className: page.height > page.width * 2.2 ? "slot page tall" : "slot page" },
         page.video ? renderVideo(page, i) : el("img", {
@@ -621,19 +641,9 @@ function openEpisode(episode) {
       ),
     ),
     renderEndCard(episode),
-    // Pages mode: the next episode's first page waits past the end card, so swiping on
-    // carries straight into it (see openNextEpisodeIfReached).
-    ...(episode.next ? [el("figure", { className: "slot page next-episode", "aria-hidden": "true" },
-      el("img", {
-        src: episode.next.pages[0].src,
-        alt: "",
-        width: episode.next.pages[0].width,
-        height: episode.next.pages[0].height,
-        loading: "lazy",
-        decoding: "async",
-        draggable: false,
-      }),
-    )] : []),
+    // ...and the next episode's first page waits past the end card, so swiping on
+    // carries straight into that one.
+    ...(episode.next ? [renderPeek("next-episode", episode.next.pages[0])] : []),
   );
 
   $("home").hidden = true;
@@ -819,7 +829,7 @@ stage.addEventListener("scroll", () => {
   if (scrollFrame) return;
   scrollFrame = requestAnimationFrame(() => {
     scrollFrame = 0;
-    if (openNextEpisodeIfReached()) return;
+    if (openNeighbourIfReached()) return;
     const index = Math.min(visibleIndex(), lastIndex());
     if (glideTarget !== null) {
       if (index !== glideTarget) return;
@@ -830,15 +840,23 @@ stage.addEventListener("scroll", () => {
 }, { passive: true });
 
 /**
- * Pages mode: once a swipe past the end card settles on the next episode's first page,
+ * Pages mode: once a swipe settles on a neighbouring episode's page (the next episode's
+ * first page past the end card, or the previous episode's last page before the first page),
  * switch to that episode. It opens on that same page, so the hand-over is seamless.
  */
-function openNextEpisodeIfReached() {
-  const peek = stage.querySelector(".next-episode");
-  if (state.mode !== "pages" || !peek || !state.episode.next) return false;
-  if (Math.abs(stage.scrollLeft - peek.offsetLeft) > 2) return false;
-  location.hash = state.episode.next.id;
-  return true;
+function openNeighbourIfReached() {
+  if (state.mode !== "pages") return false;
+  const reached = (peek) => peek && Math.abs(stage.scrollLeft - peek.offsetLeft) <= 2;
+  if (state.episode.next && reached(stage.querySelector(".next-episode"))) {
+    location.hash = state.episode.next.id;
+    return true;
+  }
+  if (state.episode.prev && reached(stage.querySelector(".prev-episode"))) {
+    steppingBackInto = state.episode.prev;
+    location.hash = state.episode.prev.id;
+    return true;
+  }
+  return false;
 }
 
 // Turning the phone changes the page width; keep the same page in view.
