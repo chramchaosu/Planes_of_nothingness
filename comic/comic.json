@@ -123,6 +123,21 @@
             { "file": "03.jpg", "text": "Two arrows, one with a green tip and one with a pink tip, meet point to point in a burst of light against a blue sky. \"The touch of two arrows that were pointing at each other.\"" },
             { "file": "04.jpg", "text": "A small green sprout with a pink bud rises from brown earth above a layer of turquoise water. \"The seed reaching the hidden water source and growing again.\"" }
           ]
+        },
+        {
+          "number": 9,
+          "title": "we can hold multitudes",
+          "folder": "episode-09",
+          "pages": [
+            { "file": "01.jpg", "text": "A white sphere at the centre of many coloured balls on sticks, like a molecule model, against a deep blue background. \"We can hold multitudes.\"" },
+            { "file": "02.jpg", "text": "A thorny green growth wraps around a pink stick and spreads over it. \"Sometimes, parts get infected and try to leech on others.\"" },
+            { "file": "03.jpg", "text": "The infected pink stick snaps in two, the green growth left holding the broken end. \"So we have to let that part go.\"" },
+            { "file": "04.jpg", "text": "Green tendrils coil tightly around the pink stick, holding on. \"But some parasites are difficult to get rid of.\"" },
+            { "file": "05.jpg", "text": "The molecule again, with one ball turned into a spiky green growth. \"So in order to stop it from infecting the whole...\"" },
+            { "file": "06.jpg", "text": "A grey chunk is torn out of a larger sphere, still tangled in the green and pink growth. \"We rip the part that belongs to the core.\"" },
+            { "file": "07.jpg", "text": "The torn place on the grey sphere is covered by a glowing turquoise net. \"But that is only an illusion.\"" },
+            { "file": "08.jpg", "text": "A glowing sphere filled with swirls of blue, pink, green and orange. \"Because at our core no division ever existed.\"" }
+          ]
         }
       ]
     }
