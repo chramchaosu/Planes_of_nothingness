@@ -325,6 +325,8 @@
   }
   .reader[data-mode="scroll"] .page { width: min(100%, 760px); flex: none; }
   .reader[data-mode="scroll"] .page img { width: 100%; height: auto; }
+  .reader[data-mode="scroll"] .next-episode,
+  .reader[data-mode="scroll"] .swipe-hint { display: none; }
 
   /* Pages mode: one page at a time, fitted to the screen. */
   /* The pages sit side by side in a sideways strip that the browser scrolls and snaps,
@@ -608,6 +610,19 @@ function openEpisode(episode) {
       ),
     ),
     renderEndCard(episode),
+    // Pages mode: the next episode's first page waits past the end card, so swiping on
+    // carries straight into it (see openNextEpisodeIfReached).
+    ...(episode.next ? [el("figure", { className: "slot page next-episode", "aria-hidden": "true" },
+      el("img", {
+        src: episode.next.pages[0].src,
+        alt: "",
+        width: episode.next.pages[0].width,
+        height: episode.next.pages[0].height,
+        loading: "lazy",
+        decoding: "async",
+        draggable: false,
+      }),
+    )] : []),
   );
 
   $("home").hidden = true;
@@ -630,6 +645,7 @@ function renderEndCard(episode) {
     el("h2", {}, `End of Episode ${episode.number}`),
     el("p", {}, episode.next ? "The story continues in the next episode." : "That's every page so far."),
     actions,
+    episode.next ? el("p", { className: "swipe-hint" }, "Swipe on to start it →") : "",
   );
 }
 
@@ -712,14 +728,15 @@ for (const type of ["touchstart", "wheel", "pointerdown"]) {
 
 /** The page the reader is looking at: the one in the middle of the screen. */
 function visibleIndex() {
+  const vertical = state.mode === "scroll";
+  const middle = vertical
+    ? stage.scrollTop + stage.clientHeight / 2
+    : stage.scrollLeft + stage.clientWidth / 2;
   let index = 0;
-  if (state.mode === "scroll") {
-    const middle = stage.scrollTop + stage.clientHeight / 2;
-    Array.from(slots()).forEach((slot, i) => { if (slot.offsetTop <= middle) index = i; });
-  } else {
-    const middle = stage.scrollLeft + stage.clientWidth / 2;
-    Array.from(slots()).forEach((slot, i) => { if (slot.offsetLeft <= middle) index = i; });
-  }
+  Array.from(slots()).forEach((slot, i) => {
+    if (!slot.offsetParent) return; // hidden in this mode
+    if ((vertical ? slot.offsetTop : slot.offsetLeft) <= middle) index = i;
+  });
   return index;
 }
 
@@ -730,7 +747,8 @@ stage.addEventListener("scroll", () => {
   if (scrollFrame) return;
   scrollFrame = requestAnimationFrame(() => {
     scrollFrame = 0;
-    const index = visibleIndex();
+    if (openNextEpisodeIfReached()) return;
+    const index = Math.min(visibleIndex(), lastIndex());
     if (glideTarget !== null) {
       if (index !== glideTarget) return;
       scrollingTo(null);
@@ -738,6 +756,18 @@ stage.addEventListener("scroll", () => {
     if (index !== state.index) goTo(index, { scroll: false });
   });
 }, { passive: true });
+
+/**
+ * Pages mode: once a swipe past the end card settles on the next episode's first page,
+ * switch to that episode. It opens on that same page, so the hand-over is seamless.
+ */
+function openNextEpisodeIfReached() {
+  const peek = stage.querySelector(".next-episode");
+  if (state.mode !== "pages" || !peek || !state.episode.next) return false;
+  if (Math.abs(stage.scrollLeft - peek.offsetLeft) > 2) return false;
+  location.hash = state.episode.next.id;
+  return true;
+}
 
 // Turning the phone changes the page width; keep the same page in view.
 window.addEventListener("resize", () => {
