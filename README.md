@@ -24,7 +24,7 @@ background, so the whole comic works offline.
 | `comic/comic.json` | The list of seasons, episodes and pages, in reading order. Each page's `text` is its caption, or a short description for pages without words (used for screen readers). |
 | `comic/season-XX/episode-XX/` | The page images (originals). |
 | `src/reader.html` | The reader app (HTML, CSS and plain JavaScript, no libraries). Contains a `__COMIC_DATA__` placeholder. |
-| `build.ps1` | Writes phone-sized copies of the pages into `pages/`, fills the placeholder with the comic data, writes `index.html`, and crops the app icons. Pages longer than 1600 px on a side are scaled down. |
+| `build.ps1` | Writes phone-sized copies of the pages into `pages/`, fills the placeholder with the comic data, writes `index.html`, and crops the app icons. Pages longer than 1600 px on a side are scaled down, but never below 1080 px on their shorter side (so tall strips and wide panoramas stay sharp). |
 | `pages/` | Built page pictures. Names end in a content fingerprint (`s01e03-04-1a2b3c4d.jpg`), so a changed picture gets a new name and can be cached forever. Do not edit; rebuild. |
 | `index.html` | The built, ready-to-use app. Do not edit it by hand; rebuild it instead. |
 | `tools/split-page.ps1` | Cuts a full comic page into its separate panels. |

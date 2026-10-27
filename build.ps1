@@ -39,6 +39,9 @@ $mimeTypes  = @{ '.jpg' = 'image/jpeg'; '.jpeg' = 'image/jpeg'; '.png' = 'image/
 # Pages larger than this (on their longest side) are scaled down for the app.
 # Phones gain nothing from more pixels, and the app loads faster. Originals are untouched.
 $maxPageSide = 1600
+# ...but never below this on their shortest side, so very tall or wide pictures
+# (a long vertical strip, a wide panorama) keep enough detail across the screen.
+$minShortSide = 1080
 $jpegQuality = 85
 
 function Get-PageImage([string]$Path, [string]$MimeType) {
@@ -46,7 +49,9 @@ function Get-PageImage([string]$Path, [string]$MimeType) {
     # (the reader uses the size to reserve space before an image is drawn).
     $image = [System.Drawing.Image]::FromFile($Path)
     try {
-        $scale = [math]::Min([double]1, [double]$maxPageSide / [math]::Max($image.Width, $image.Height))
+        $longest  = [math]::Max($image.Width, $image.Height)
+        $shortest = [math]::Min($image.Width, $image.Height)
+        $scale = [math]::Min([double]1, [math]::Max([double]$maxPageSide / $longest, [double]$minShortSide / $shortest))
         if ($scale -ge 1) {
             return @{ bytes = [IO.File]::ReadAllBytes($Path); mime = $MimeType; width = $image.Width; height = $image.Height }
         }

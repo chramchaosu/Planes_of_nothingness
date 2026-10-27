@@ -360,6 +360,10 @@
     object-fit: contain;
     -webkit-user-drag: none;
   }
+  /* A very tall picture (a long vertical strip) would be a thin sliver if fitted to the screen,
+     so it fills the width instead and scrolls up and down within its page. */
+  .reader[data-mode="pages"] .page.tall { display: block; }
+  .reader[data-mode="pages"] .page.tall img { max-width: 760px; height: auto; margin-inline: auto; display: block; }
 
   .page { margin: 0; }
 
@@ -597,7 +601,7 @@ function openEpisode(episode) {
 
   stage.replaceChildren(
     ...episode.pages.map((page, i) =>
-      el("figure", { className: "slot page" },
+      el("figure", { className: page.height > page.width * 2.2 ? "slot page tall" : "slot page" },
         el("img", {
           src: page.src,
           alt: `Page ${i + 1}: ${page.text}`,

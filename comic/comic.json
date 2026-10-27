@@ -200,6 +200,22 @@
             { "file": "03.jpg", "text": "Three versions of the same view from inside a sea cave, out to rocks and a natural arch: grey stone and blue water; pink rocks under a turquoise sky; and a misty, icy blue." },
             { "file": "04.jpg", "text": "Three versions of the same jagged peaks by the sea: blue mountains lit orange by a peach sky; sandy brown spires under a pale green sky; and dusky rose rocks beside a turquoise sea." }
           ]
+        },
+        {
+          "number": 16,
+          "title": "Start from the rock. Rock from the start",
+          "folder": "episode-16",
+          "pages": [
+            { "file": "01.jpg", "text": "\"Start from the rock.\" in rough stencil letters on a deep blue band; below it, the view from inside a sea cave out to grey rocks, a tall peak and a natural stone arch over shining blue water; then another blue band: \"Rock from the start.\"" }
+          ]
+        },
+        {
+          "number": 17,
+          "title": "Strom na svívanie",
+          "folder": "episode-17",
+          "pages": [
+            { "file": "01.jpg", "text": "A tall, narrow painting of one great tree. At the top, against a violet night sky, a white heron flies over nests full of birds: doves, a flamingo, a parrot, and a small figure peeking out. Below, the winding trunk twists through glowing green and white clouds of leaves, and at the bottom its roots weave into a fiery red and orange braided knot." }
+          ]
         }
       ]
     }
