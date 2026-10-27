@@ -138,6 +138,19 @@
             { "file": "07.jpg", "text": "The torn place on the grey sphere is covered by a glowing turquoise net. \"But that is only an illusion.\"" },
             { "file": "08.jpg", "text": "A glowing sphere filled with swirls of blue, pink, green and orange. \"Because at our core no division ever existed.\"" }
           ]
+        },
+        {
+          "number": 10,
+          "title": "About Hearts",
+          "folder": "episode-10",
+          "pages": [
+            { "file": "01.jpg", "text": "A pink anatomical heart inside a pale circle, a glowing pink wave winding around it. \"All hearts have their specific tunes.\"" },
+            { "file": "02.jpg", "text": "Two hearts side by side, their two waves rising and falling together. \"Some hearts are naturally in tune with one another and they create a pleasant harmony.\"" },
+            { "file": "03.jpg", "text": "Two hearts side by side, their waves clashing out of step, with jagged green sparks between them. \"Some, on the other hand, create cacophony and unwanted tension, so they reject each other.\"" },
+            { "file": "04.jpg", "text": "Four hearts, each with a wave of its own colour and rhythm: pink, red, blue and yellow. \"It does not mean they are toxic. We are just different. All of us.\"" },
+            { "file": "05.jpg", "text": "One heart wrapped in a tangle of many faint, colourful waves and one sharp, jagged black one. \"Some hearts are a bit more complicated. They are hard to be in tune with, so they get rejected often.\"" },
+            { "file": "06.jpg", "text": "The complicated heart in the middle, faint colours inside it, sends out only a simple, even wave toward four other hearts. \"So in time they learn how to conceal their sound and let out only a simple tune. They sacrifice authenticity for (perceived) acceptance...\"" }
+          ]
         }
       ]
     }
