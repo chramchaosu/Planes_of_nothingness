@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0f0d13">
+<!-- build.ps1 fills in a fingerprint of this version; the app compares it to spot updates. -->
+<meta name="app-build" content="dae67a84">
 <title>Planes of Nothingness</title>
 <!-- Home-screen app setup (used when served from GitHub Pages). -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -766,6 +768,10 @@ for (const button of document.querySelectorAll(".modes button")) {
 // ---------- Navigation: #home or an episode id like #s1e1 ----------
 
 function showHome() {
+  if (newVersionReady) {
+    location.reload();
+    return;
+  }
   state.episode = null;
   reader.hidden = true;
   stage.replaceChildren();
@@ -781,8 +787,42 @@ function route() {
   else showHome();
 }
 
+// ---------- Picking up new versions ----------
+
+// A home-screen app on a phone often just wakes up instead of reloading, so it would keep
+// showing an old version. Each time it comes back to the screen, ask the website for the
+// current version. If it's newer, reload: straight away on the home screen, or as soon as
+// the reader goes back to it (never in the middle of an episode).
+const BUILD_ID = document.querySelector('meta[name="app-build"]')?.content;
+let newVersionReady = false;
+
+async function checkForNewVersion() {
+  if (location.protocol !== "https:" || !BUILD_ID) return;
+  try {
+    const response = await fetch("./", { cache: "no-store" });
+    const latest = (await response.text()).match(/name="app-build" content="([^"]+)"/)?.[1];
+    if (!latest || latest === BUILD_ID) return;
+    // Reload at most once per new version, so a slow connection can't cause a reload loop.
+    try {
+      if (sessionStorage.getItem("reloaded-for") === latest) return;
+      sessionStorage.setItem("reloaded-for", latest);
+    } catch {
+      return; // Can't remember the attempt, so don't risk a loop.
+    }
+    newVersionReady = true;
+    if (!state.episode) location.reload();
+  } catch {
+    // Offline: try again next time.
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") checkForNewVersion();
+});
+
 window.addEventListener("hashchange", route);
 route();
+checkForNewVersion();
 
 // ---------- Offline copy and automatic updates (website only) ----------
 

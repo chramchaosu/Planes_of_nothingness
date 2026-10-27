@@ -134,6 +134,10 @@ if (-not $template.Contains($placeholder)) {
 }
 $html = $template.Replace($placeholder, $json)
 
+# A fingerprint of this version, so a running app can tell when a newer one is online.
+$buildId = Get-Fingerprint ([System.Text.Encoding]::UTF8.GetBytes($html))
+$html = $html.Replace('__BUILD_ID__', $buildId)
+
 [IO.File]::WriteAllText($OutFile, $html, [System.Text.UTF8Encoding]::new($false))
 
 $appKb   = [math]::Round((Get-Item -LiteralPath $OutFile).Length / 1KB)

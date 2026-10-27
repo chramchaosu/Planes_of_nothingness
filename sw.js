@@ -18,7 +18,7 @@
  * PAGES_CACHE must match the name used in src/reader.html.
  */
 
-const CACHE_NAME = "planes-of-nothingness-v2";
+const CACHE_NAME = "planes-of-nothingness-v3";
 const PAGES_CACHE = "planes-of-nothingness-pages";
 const APP_FILES = [
   "./",
@@ -55,7 +55,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const fromNetwork = fetch(request).then((response) => {
+  // "no-cache": always ask the server whether there is something newer (cheap when nothing
+  // changed), instead of reusing the browser's own copy for up to 10 minutes.
+  const fromNetwork = fetch(request.url, { cache: "no-cache", credentials: "same-origin" }).then((response) => {
     if (response.ok) {
       const copy = response.clone();
       caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
