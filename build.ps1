@@ -30,10 +30,42 @@ $placeholder  = '__COMIC_DATA__'
 
 $mimeTypes = @{ '.jpg' = 'image/jpeg'; '.jpeg' = 'image/jpeg'; '.png' = 'image/png'; '.webp' = 'image/webp' }
 
-function Get-ImageSize([string]$Path) {
-    # Width and height let the reader reserve space before an image is drawn.
+# Pages larger than this (on their longest side) are scaled down in the built file.
+# Phones gain nothing from more pixels, and the app loads faster. Originals are untouched.
+$maxPageSide = 1600
+$jpegQuality = 85
+
+function Get-PageImage([string]$Path, [string]$MimeType) {
+    # Returns the image bytes to embed plus their width and height
+    # (the reader uses the size to reserve space before an image is drawn).
     $image = [System.Drawing.Image]::FromFile($Path)
-    try { return @{ width = $image.Width; height = $image.Height } }
+    try {
+        $scale = [math]::Min([double]1, [double]$maxPageSide / [math]::Max($image.Width, $image.Height))
+        if ($scale -ge 1) {
+            return @{ bytes = [IO.File]::ReadAllBytes($Path); mime = $MimeType; width = $image.Width; height = $image.Height }
+        }
+
+        $width  = [int][math]::Round($image.Width * $scale)
+        $height = [int][math]::Round($image.Height * $scale)
+        $resized = [System.Drawing.Bitmap]::new($width, $height)
+        $graphics = [System.Drawing.Graphics]::FromImage($resized)
+        $stream = [IO.MemoryStream]::new()
+        try {
+            $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+            $graphics.DrawImage($image, 0, 0, $width, $height)
+
+            $encoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object MimeType -eq 'image/jpeg'
+            $options = [System.Drawing.Imaging.EncoderParameters]::new(1)
+            $options.Param[0] = [System.Drawing.Imaging.EncoderParameter]::new([System.Drawing.Imaging.Encoder]::Quality, [long]$jpegQuality)
+            $resized.Save($stream, $encoder, $options)
+            return @{ bytes = $stream.ToArray(); mime = 'image/jpeg'; width = $width; height = $height }
+        }
+        finally {
+            $stream.Dispose()
+            $graphics.Dispose()
+            $resized.Dispose()
+        }
+    }
     finally { $image.Dispose() }
 }
 
@@ -55,15 +87,14 @@ $seasons = @(foreach ($season in $manifest.seasons) {
                 throw "Unsupported image type '$extension' for $path. Use .jpg, .png or .webp."
             }
 
-            $bytes = [IO.File]::ReadAllBytes($path)
-            $imageData.Add("data:$($mimeTypes[$extension]);base64,$([Convert]::ToBase64String($bytes))")
-            $size = Get-ImageSize $path
+            $picture = Get-PageImage $path $mimeTypes[$extension]
+            $imageData.Add("data:$($picture.mime);base64,$([Convert]::ToBase64String($picture.bytes))")
 
             [ordered]@{
                 src    = "__IMAGE_$($imageData.Count - 1)__"
                 text   = $page.text
-                width  = $size.width
-                height = $size.height
+                width  = $picture.width
+                height = $picture.height
             }
         })
 

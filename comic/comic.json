@@ -48,6 +48,18 @@
             { "file": "15.jpg", "text": "It is the people trying to save you..." },
             { "file": "16.jpg", "text": "...from Nothing." }
           ]
+        },
+        {
+          "number": 3,
+          "folder": "episode-03",
+          "pages": [
+            { "file": "01.jpg", "text": "A dirt road lined with trees under a pale blue sky, the sun low on the left." },
+            { "file": "02.jpg", "text": "A blond person in a blue hoodie, holding a walking stick, steps between tree trunks at the edge of the road." },
+            { "file": "03.jpg", "text": "Looking down the tree-lined road toward a red sunset. A dark figure stands in the middle of the road." },
+            { "file": "04.jpg", "text": "A person in a blue hoodie with a backpack and rolled-up brown trousers stands on the road, trees and a red glow behind." },
+            { "file": "05.jpg", "text": "Under a pink sky, the two walkers stand at opposite ends of a row of trees, facing each other." },
+            { "file": "06.jpg", "text": "Close-up of two pairs of shoes facing each other on the path: dark high-tops on the left, worn trainers on the right." }
+          ]
         }
       ]
     }
