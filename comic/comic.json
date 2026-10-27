@@ -216,6 +216,14 @@
           "pages": [
             { "file": "01.jpg", "text": "A tall, narrow painting of one great tree. At the top, against a violet night sky, a white heron flies over nests full of birds: doves, a flamingo, a parrot, and a small figure peeking out. Below, the winding trunk twists through glowing green and white clouds of leaves, and at the bottom its roots weave into a fiery red and orange braided knot." }
           ]
+        },
+        {
+          "number": 18,
+          "title": "Come disappear",
+          "folder": "episode-18",
+          "pages": [
+            { "file": "01.jpg", "text": "A black and red spiral like a whirlpool, scattered with scribbled stars and a pale crescent moon. The words \"Come disappear\" in shaky white and red letters run around the spiral toward its centre, then come back out upside down." }
+          ]
         }
       ]
     }
