@@ -51,6 +51,7 @@
         },
         {
           "number": 3,
+          "title": "I have build this so that you can come in",
           "folder": "episode-03",
           "pages": [
             { "file": "01.jpg", "text": "A dirt road lined with trees under a pale blue sky, the sun low on the left." },
@@ -62,7 +63,20 @@
           ]
         },
         {
+          "number": 4,
+          "title": "Do not get used to this",
+          "folder": "episode-04",
+          "pages": [
+            { "file": "01.jpg", "text": "A row of four trees on a grassy plain under a deep violet night sky." },
+            { "file": "02.jpg", "text": "A person in a blue hood looks down. \"Where am I?\" \"In the middle of Nothing.\" \"There was a Pit...\" \"The Pit. I know. I have built this so that you can rest.\"" },
+            { "file": "03.jpg", "text": "A simple world seen from above: a road between rows of bushes, a small fire glowing in the corner. \"What is it that you have built, exactly?\" \"For now, only this road, some trees and surrounding fields. The simplest world.\"" },
+            { "file": "04.jpg", "text": "The two travellers sit on either side of a campfire under the trees at night. \"And this fire that cannot burn me but will keep us warm.\" \"Yes.\" \"In that case, can I make a wish?\" \"Yes.\" \"May I have eyes, please?\"" },
+            { "file": "05.jpg", "text": "A close-up of a pair of brown eyes, a small flame reflected in each. \"Yes, you may. But I am not going to draw them for every scene.\"" }
+          ]
+        },
+        {
           "number": 5,
+          "title": "We have the trees at home",
           "folder": "episode-05",
           "pages": [
             { "file": "01.jpg", "text": "A forest of huge orange-brown tree trunks in daylight. \"May we have more trees?\"" },

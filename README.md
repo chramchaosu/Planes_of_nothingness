@@ -40,6 +40,13 @@ On Windows, in PowerShell, from this folder:
 
 ## Adding an episode
 
+If the episode is drawn as one full page with several panels, cut it into
+separate pictures first:
+
+```powershell
+.\tools\split-page.ps1 -Page 'C:\path\to\page.jpg' -OutDir comic\season-01\episode-06
+```
+
 1. Put the page images in a new folder, e.g. `comic/season-01/episode-02/01.jpg`, `02.jpg`, ...
 2. Add the episode to `comic/comic.json` with its `folder` and a `pages` list.
    An optional `"title"` is shown instead of "Episode 2".
