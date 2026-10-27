@@ -6,6 +6,13 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0f0d13">
 <title>Planes of Nothingness</title>
+<!-- Home-screen app setup (used when served from GitHub Pages). -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Planes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Shadows+Into+Light+Two&display=swap">
@@ -730,6 +737,15 @@ function route() {
 
 window.addEventListener("hashchange", route);
 route();
+
+// ---------- Offline copy and automatic updates (website only) ----------
+
+// A downloaded copy opened from the phone's files can't use this, and doesn't need it.
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {
+    // Not available here (for example in a preview). The comic still works online.
+  });
+}
 </script>
 </body>
 </html>

@@ -1,20 +1,23 @@
 <#
 .SYNOPSIS
-    Builds planes-of-nothingness.html, the single file you copy to a phone.
+    Builds index.html (the whole app in one file) and the home-screen icons.
 
 .DESCRIPTION
     Reads comic/comic.json, embeds every page image listed there directly into
     src/reader.html (as base64 data URIs), and writes one self-contained HTML
-    file that works offline with no other files next to it.
+    file that works offline with no other files next to it. GitHub Pages
+    serves it as the website; it can also be downloaded and opened as is.
+
+    Also crops the app icons (icon-180/192/512.png) from a comic page.
 
     Works in Windows PowerShell 5.1 and PowerShell 7+.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\build.ps1
+    .\build.ps1
 #>
 [CmdletBinding()]
 param(
-    [string]$OutFile = (Join-Path $PSScriptRoot 'planes-of-nothingness.html')
+    [string]$OutFile = (Join-Path $PSScriptRoot 'index.html')
 )
 
 Set-StrictMode -Version Latest
@@ -92,3 +95,30 @@ $html = $template.Replace($placeholder, $json)
 
 $sizeMb = [math]::Round((Get-Item -LiteralPath $OutFile).Length / 1MB, 2)
 Write-Host "Built $OutFile ($($imageData.Count) pages, $sizeMb MB)"
+
+# ---------- App icons ----------
+
+# A square cut from the swirl of the Pit (Season 1, Episode 1, page 9), above its caption.
+$iconSource = Join-Path $comicDir 'season-01/episode-01/09.jpg'
+$iconCrop   = [System.Drawing.Rectangle]::new(73, 170, 580, 580)
+
+$source = [System.Drawing.Image]::FromFile($iconSource)
+try {
+    foreach ($size in 180, 192, 512) {
+        $icon = [System.Drawing.Bitmap]::new($size, $size)
+        $graphics = [System.Drawing.Graphics]::FromImage($icon)
+        try {
+            $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+            $graphics.DrawImage($source, [System.Drawing.Rectangle]::new(0, 0, $size, $size), $iconCrop, [System.Drawing.GraphicsUnit]::Pixel)
+            $icon.Save((Join-Path $PSScriptRoot "icon-$size.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+        }
+        finally {
+            $graphics.Dispose()
+            $icon.Dispose()
+        }
+    }
+}
+finally {
+    $source.Dispose()
+}
+Write-Host 'Built icon-180.png, icon-192.png, icon-512.png'
