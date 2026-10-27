@@ -189,6 +189,17 @@
           "pages": [
             { "file": "01.jpg", "text": "A sketchbook page covered in looping violet ballpoint lines that curve out from the middle and back again, like two great wings or the field lines of a magnet. Across the centre: \"Bol tam niekto z Vás?\" (Has any of you been there?) Signed \"27. 8. 2025, VeVe\"." }
           ]
+        },
+        {
+          "number": 15,
+          "title": "World building",
+          "folder": "episode-15",
+          "pages": [
+            { "file": "01.jpg", "text": "\"World building is a skill\", in striped outline letters on textured paper, around a grid of nine landscape studies in three columns, each column with its own row of paint swatches below." },
+            { "file": "02.jpg", "text": "Three versions of the same canyon, stacked: teal cliffs and crimson rock under a dark sky; violet spires and sandy ledges under a lilac sky; and golden, sunlit sandstone under a pale blue sky." },
+            { "file": "03.jpg", "text": "Three versions of the same view from inside a sea cave, out to rocks and a natural arch: grey stone and blue water; pink rocks under a turquoise sky; and a misty, icy blue." },
+            { "file": "04.jpg", "text": "Three versions of the same jagged peaks by the sea: blue mountains lit orange by a peach sky; sandy brown spires under a pale green sky; and dusky rose rocks beside a turquoise sea." }
+          ]
         }
       ]
     }
