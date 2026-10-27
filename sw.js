@@ -9,7 +9,7 @@
  * episodes arrive on their own. If the network is missing or slow, the kept
  * copy is shown instead and the download carries on in the background.
  *
- * Comic pictures (pages/...) are "saved copy first". Their file names contain
+ * Comic pages (pages/..., pictures and short videos) are "saved copy first". Their file names contain
  * a fingerprint of their contents, so a name never points to a different
  * picture and a saved copy can't go out of date. The reader page fills this
  * cache with every page in the background, so the whole comic works offline.
@@ -70,15 +70,47 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(firstUsable(request, fromNetwork));
 });
 
-/** A comic picture: the saved copy if there is one, otherwise download and save it. */
+/** A comic page: the saved copy if there is one, otherwise download and save it. */
 async function savedCopyFirst(request) {
   const cache = await caches.open(PAGES_CACHE);
   const cached = await cache.match(request);
-  if (cached) return cached;
+  // Videos are read in pieces (a "Range" request), and Safari only plays one when it
+  // gets exactly the piece it asked for.
+  const range = request.headers.get("range");
+  if (cached) return range ? piece(cached, range) : cached;
+  // A piece can't be saved on its own; the reader saves the whole video in the background.
+  if (range) return fetch(request);
 
   const response = await fetch(request);
   if (response.ok) await cache.put(request, response.clone());
   return response;
+}
+
+/** The part of a saved file named by a Range header such as "bytes=0-1" or "bytes=1000-". */
+async function piece(response, range) {
+  const body = await response.blob();
+  const size = body.size;
+  const match = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+  let start = NaN;
+  let end = size - 1;
+  if (match && match[1] !== "") {
+    start = Number(match[1]);
+    if (match[2] !== "") end = Math.min(Number(match[2]), size - 1);
+  } else if (match && match[2] !== "") {
+    start = Math.max(0, size - Number(match[2])); // "bytes=-500": the last 500 bytes
+  }
+  if (!(start <= end)) {
+    return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+  }
+  return new Response(body.slice(start, end + 1), {
+    status: 206,
+    headers: {
+      "Content-Type": response.headers.get("Content-Type") ?? "",
+      "Content-Range": `bytes ${start}-${end}/${size}`,
+      "Content-Length": String(end - start + 1),
+      "Accept-Ranges": "bytes",
+    },
+  });
 }
 
 /** The network answer if it comes in time, otherwise the saved copy. */

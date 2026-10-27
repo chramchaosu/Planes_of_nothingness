@@ -232,6 +232,14 @@
           "pages": [
             { "file": "01.jpg", "text": "A mirror-image night scene under a smiling pale moon and two four-pointed stars. On two tall magenta peaks sit two small figures, one in a wide hat, each holding a ribbon-like ladder that winds down the slopes. Between the peaks a glowing figure stands with arms raised, and below it the two ribbons twist around each other like a double helix and cross in an X." }
           ]
+        },
+        {
+          "number": 20,
+          "title": "Ruža",
+          "folder": "episode-20",
+          "pages": [
+            { "file": "01.mp4", "poster": "01-poster.jpg", "text": "A short silent animation. A wild rose with one pink flower and saw-edged leaves floats in a pale blue sky with soft clouds, while handwriting appears around it word by word: \"Si ruža, po-kr-čená, no nekonečne voňavá (ako láska muža)\" (You are a rose, crumpled, but endlessly fragrant (like a man's love))." }
+          ]
         }
       ]
     }

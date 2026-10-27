@@ -47,7 +47,7 @@
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
   }
-  img { display: block; max-width: 100%; }
+  img, video { display: block; max-width: 100%; }
   [hidden] { display: none !important; }
   button, input { font: inherit; color: inherit; }
   a { color: inherit; }
@@ -324,7 +324,7 @@
     overflow-y: auto;
   }
   .reader[data-mode="scroll"] .page { width: min(100%, 760px); flex: none; }
-  .reader[data-mode="scroll"] .page img { width: 100%; height: auto; }
+  .reader[data-mode="scroll"] .page :is(img, video) { width: 100%; height: auto; }
   .reader[data-mode="scroll"] .next-episode,
   .reader[data-mode="scroll"] .swipe-hint { display: none; }
 
@@ -354,7 +354,7 @@
     display: flex;
     padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
   }
-  .reader[data-mode="pages"] .page img {
+  .reader[data-mode="pages"] .page :is(img, video) {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -363,7 +363,7 @@
   /* A very tall picture (a long vertical strip) would be a thin sliver if fitted to the screen,
      so it fills the width instead and scrolls up and down within its page. */
   .reader[data-mode="pages"] .page.tall { display: block; }
-  .reader[data-mode="pages"] .page.tall img { max-width: 760px; height: auto; margin-inline: auto; display: block; }
+  .reader[data-mode="pages"] .page.tall :is(img, video) { max-width: 760px; height: auto; margin-inline: auto; display: block; }
 
   .page { margin: 0; }
 
@@ -602,7 +602,7 @@ function openEpisode(episode) {
   stage.replaceChildren(
     ...episode.pages.map((page, i) =>
       el("figure", { className: page.height > page.width * 2.2 ? "slot page tall" : "slot page" },
-        el("img", {
+        page.video ? renderVideo(page, i) : el("img", {
           src: page.src,
           alt: `Page ${i + 1}: ${page.text}`,
           width: page.width,
@@ -633,6 +633,28 @@ function openEpisode(episode) {
   reader.hidden = false;
   showChrome(true);
   setMode(state.mode);
+}
+
+/**
+ * A page that is a short silent animation. It shows its poster picture until it plays,
+ * and plays by itself (see playCurrentVideo) unless the phone asks for less motion,
+ * in which case it gets a play button instead.
+ */
+function renderVideo(page, i) {
+  return el("video", {
+    src: page.video,
+    poster: page.src,
+    width: page.width,
+    height: page.height,
+    preload: "none",
+    muted: true,
+    defaultMuted: true, // the "muted" attribute itself, which iPhones need before playing by themselves
+    loop: true,
+    playsinline: "", // play inside the page, not full screen
+    controls: prefersReducedMotion(),
+    role: "img",
+    "aria-label": `Page ${i + 1}: ${page.text}`,
+  });
 }
 
 function renderEndCard(episode) {
@@ -673,7 +695,10 @@ function goTo(index, { smooth = true, scroll = true } = {}) {
   // Fetch this page and its neighbours now, so turning the page doesn't wait for a download.
   for (const i of [state.index - 1, state.index, state.index + 1]) {
     slots()[i]?.querySelector("img")?.setAttribute("loading", "eager");
+    const video = slots()[i]?.querySelector("video");
+    if (video) video.preload = "auto";
   }
+  playCurrentVideo();
 
   // Bring the page into view: down the strip in scroll mode, sideways in pages mode.
   // Jumps (opening an episode, switching mode, the slider) happen at once; page turns glide.
@@ -689,6 +714,22 @@ function goTo(index, { smooth = true, scroll = true } = {}) {
   updateControls();
   const key = progressKey(state.episode);
   if (state.index > store.get(key, 0)) store.set(key, state.index);
+}
+
+/** A video page plays from its start when the reader arrives on it, and pauses when they leave. */
+function playCurrentVideo() {
+  Array.from(slots()).forEach((slot, i) => {
+    const video = slot.querySelector("video");
+    if (!video) return;
+    if (i !== state.index) {
+      video.pause();
+      return;
+    }
+    if (!video.paused || video.controls) return;
+    video.currentTime = 0;
+    // An iPhone in Low Power Mode refuses to play videos by itself; offer a play button then.
+    video.play().catch(() => { video.controls = true; });
+  });
 }
 
 function updateControls() {
@@ -783,7 +824,7 @@ const isZoomed = () => (window.visualViewport?.scale ?? 1) > 1.05;
 // Taps: in pages mode the left and right edges turn pages; anywhere else shows or hides the bars.
 // (A swipe scrolls instead, and the browser sends no tap for it.)
 stage.addEventListener("click", (event) => {
-  if (event.target.closest("a, button")) return;
+  if (event.target.closest("a, button, video[controls]")) return;
   if (state.mode === "pages" && state.index < lastIndex() && !isZoomed()) {
     const { left, width } = stage.getBoundingClientRect();
     const x = (event.clientX - left) / width;
@@ -905,7 +946,8 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
 async function savePagesForOffline() {
   const cache = await caches.open(PAGES_CACHE);
   const wanted = new Set(episodes.flatMap((episode) =>
-    episode.pages.map((page) => new URL(page.src, location.href).href)));
+    episode.pages.flatMap((page) => [page.src, page.video].filter(Boolean)
+      .map((src) => new URL(src, location.href).href))));
 
   const saved = new Set();
   for (const request of await cache.keys()) {

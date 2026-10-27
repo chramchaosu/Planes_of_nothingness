@@ -35,6 +35,9 @@ $placeholder  = '__COMIC_DATA__'
 
 $extensions = @{ 'image/jpeg' = '.jpg'; 'image/png' = '.png'; 'image/webp' = '.webp' }
 $mimeTypes  = @{ '.jpg' = 'image/jpeg'; '.jpeg' = 'image/jpeg'; '.png' = 'image/png'; '.webp' = 'image/webp' }
+# A page can also be a short video. It is published unchanged, and its "poster" picture
+# (listed next to it in comic.json) stands in for it in thumbnails and while it loads.
+$videoExtensions = @('.mp4')
 
 # Pages larger than this (on their longest side) are scaled down for the app.
 # Phones gain nothing from more pixels, and the app loads faster. Originals are untouched.
@@ -98,27 +101,45 @@ $seasons = @(foreach ($season in $manifest.seasons) {
         $pageNumber = 0
         $pages = @(foreach ($page in $episode.pages) {
             $pageNumber++
-            $path = Join-Path $comicDir (Join-Path $season.folder (Join-Path $episode.folder $page.file))
+            $episodeDir = Join-Path $comicDir (Join-Path $season.folder $episode.folder)
+            $path = Join-Path $episodeDir $page.file
             if (-not (Test-Path -LiteralPath $path)) {
-                throw "Page image not found: $path (listed in comic/comic.json)"
+                throw "Page file not found: $path (listed in comic/comic.json)"
             }
+            $prefix = 's{0:00}e{1:00}-{2:00}' -f $season.number, $episode.number, $pageNumber
             $extension = [IO.Path]::GetExtension($path).ToLowerInvariant()
+
+            $video = $null
+            if ($videoExtensions -contains $extension) {
+                if (-not $page.PSObject.Properties['poster']) {
+                    throw "The video $path needs a ""poster"" picture in comic/comic.json."
+                }
+                $videoBytes = [IO.File]::ReadAllBytes($path)
+                $video = "$prefix-$(Get-Fingerprint $videoBytes)$extension"
+                [IO.File]::WriteAllBytes((Join-Path $pagesDir $video), $videoBytes)
+                $path = Join-Path $episodeDir $page.poster
+                if (-not (Test-Path -LiteralPath $path)) {
+                    throw "Poster picture not found: $path (listed in comic/comic.json)"
+                }
+                $extension = [IO.Path]::GetExtension($path).ToLowerInvariant()
+            }
             if (-not $mimeTypes.ContainsKey($extension)) {
-                throw "Unsupported image type '$extension' for $path. Use .jpg, .png or .webp."
+                throw "Unsupported file type '$extension' for $path. Use .jpg, .png or .webp (or .mp4 with a poster)."
             }
 
             $picture = Get-PageImage $path $mimeTypes[$extension]
-            $name = 's{0:00}e{1:00}-{2:00}-{3}{4}' -f $season.number, $episode.number, $pageNumber,
-                (Get-Fingerprint $picture.bytes), $extensions[$picture.mime]
+            $name = "$prefix-$(Get-Fingerprint $picture.bytes)$($extensions[$picture.mime])"
             [IO.File]::WriteAllBytes((Join-Path $pagesDir $name), $picture.bytes)
             $pageCount++
 
-            [ordered]@{
+            $entry = [ordered]@{
                 src    = "pages/$name"
                 text   = $page.text
                 width  = $picture.width
                 height = $picture.height
             }
+            if ($video) { $entry.video = "pages/$video" }
+            $entry
         })
 
         $entry = [ordered]@{ number = $episode.number; pages = $pages }
@@ -147,7 +168,7 @@ $html = $html.Replace('__BUILD_ID__', $buildId)
 
 $appKb   = [math]::Round((Get-Item -LiteralPath $OutFile).Length / 1KB)
 $pagesMb = [math]::Round(((Get-ChildItem -LiteralPath $pagesDir | Measure-Object Length -Sum).Sum) / 1MB, 2)
-Write-Host "Built $OutFile ($appKb KB) and $pageCount pictures in pages/ ($pagesMb MB)"
+Write-Host "Built $OutFile ($appKb KB) and $pageCount pages in pages/ ($pagesMb MB)"
 
 # ---------- App icons ----------
 
