@@ -151,6 +151,16 @@
             { "file": "05.jpg", "text": "One heart wrapped in a tangle of many faint, colourful waves and one sharp, jagged black one. \"Some hearts are a bit more complicated. They are hard to be in tune with, so they get rejected often.\"" },
             { "file": "06.jpg", "text": "The complicated heart in the middle, faint colours inside it, sends out only a simple, even wave toward four other hearts. \"So in time they learn how to conceal their sound and let out only a simple tune. They sacrifice authenticity for (perceived) acceptance...\"" }
           ]
+        },
+        {
+          "number": 11,
+          "folder": "episode-11",
+          "pages": [
+            { "file": "01.jpg", "text": "On a green background, a woman with long hair looks on, wide-eyed. \"Prečo si si oholila polku hlavy?\" (Why did you shave half of your head?)" },
+            { "file": "02.jpg", "text": "The same woman, now with one side of her head shaved, answers calmly. \"Nie polku, ale tretinu. A na to, aby som mohla robiť komixy, kde sa rozprávam sama so sebou.\" (Not half, a third. And so that I can make comics where I talk to myself.)" },
+            { "file": "03.jpg", "text": "The long-haired woman smiles slyly. \"OK, OK... Ale ja budem tá rozumná a Ty tá prdlá. Inak do toho nejdem.\" (OK, OK... But I'll be the sensible one and You the crazy one. Otherwise I'm not doing it.)" },
+            { "file": "04.jpg", "text": "The woman with the shaved side frowns, determined. \"Platí.\" (Deal.)" }
+          ]
         }
       ]
     }
