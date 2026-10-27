@@ -334,20 +334,30 @@
     user-select: none;
     -webkit-user-select: none;
   }
+  /* The current page sits in place with its neighbours just off screen on either side.
+     --offset is the page's distance from the current one (set by goTo);
+     --drag is how far a finger has pulled the pages sideways (set while swiping). */
   .reader[data-mode="pages"] .slot { display: none; }
-  .reader[data-mode="pages"] .slot.is-current {
+  .reader[data-mode="pages"] .slot.is-near {
     display: flex;
-    width: 100%;
-    height: 100%;
-    animation: fade-in 0.2s ease;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: env(safe-area-inset-left, 0px);
+    right: env(safe-area-inset-right, 0px);
+    min-height: 0;
+    overflow-y: auto;
+    transform: translateX(calc(var(--offset, 0) * (100% + 24px) + var(--drag, 0px)));
+    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
+  .reader[data-mode="pages"] .stage.dragging .slot,
+  .reader[data-mode="pages"] .stage.instant .slot { transition: none; }
   .reader[data-mode="pages"] .page img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     -webkit-user-drag: none;
   }
-  @keyframes fade-in { from { opacity: 0; } }
 
   .page { margin: 0; }
 
@@ -385,7 +395,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .bar, .episode { transition: none; }
-    .reader[data-mode="pages"] .slot.is-current { animation: none; }
+    .reader[data-mode="pages"] .slot.is-near { transition: none; }
   }
 </style>
 </head>
@@ -640,10 +650,21 @@ function goTo(index, { smooth = true, scroll = true } = {}) {
   if (!state.episode) return;
   state.index = Math.min(Math.max(0, index), lastIndex());
 
-  Array.from(slots()).forEach((slot, i) => slot.classList.toggle("is-current", i === state.index));
+  // Jumps (opening an episode, switching mode, the slider) happen at once; page turns slide.
+  if (!smooth) stage.classList.add("instant");
+  Array.from(slots()).forEach((slot, i) => {
+    const offset = i - state.index;
+    slot.classList.toggle("is-current", offset === 0);
+    slot.classList.toggle("is-near", Math.abs(offset) <= 1);
+    slot.style.setProperty("--offset", String(offset));
+  });
+  if (!smooth) {
+    void stage.offsetWidth; // let the pages settle in their new places before sliding is switched back on
+    stage.classList.remove("instant");
+  }
 
-  // Fetch this page and the next one now, so turning the page doesn't wait for a download.
-  for (const i of [state.index, state.index + 1]) {
+  // Fetch this page and its neighbours now, so turning the page doesn't wait for a download.
+  for (const i of [state.index - 1, state.index, state.index + 1]) {
     slots()[i]?.querySelector("img")?.setAttribute("loading", "eager");
   }
 
@@ -697,28 +718,55 @@ stage.addEventListener("scroll", () => {
   });
 }, { passive: true });
 
-// Pages mode: swipe left or right to turn the page. Ignored while pinch-zoomed.
-let swipeStart = null;
+// Pages mode: the pages follow a finger sideways; letting go far enough (or with a quick flick)
+// turns the page, otherwise it slides back. Ignored while pinch-zoomed.
+let drag = null;
 let swiped = false;
 const isZoomed = () => (window.visualViewport?.scale ?? 1) > 1.05;
+
+function endDrag() {
+  drag = null;
+  stage.classList.remove("dragging");
+  stage.style.removeProperty("--drag");
+}
 
 stage.addEventListener("pointerdown", (event) => {
   swiped = false;
   // A second finger means a pinch, not a swipe.
-  swipeStart = event.isPrimary ? { x: event.clientX, y: event.clientY } : null;
+  if (!event.isPrimary) return endDrag();
+  drag = { x: event.clientX, y: event.clientY, startedAt: event.timeStamp, dx: 0, moving: false };
 });
-stage.addEventListener("pointercancel", () => { swipeStart = null; });
-stage.addEventListener("pointerup", (event) => {
-  if (!swipeStart || !event.isPrimary || state.mode !== "pages" || isZoomed()) return;
-  const dx = event.clientX - swipeStart.x;
-  const dy = event.clientY - swipeStart.y;
-  swipeStart = null;
-  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+
+stage.addEventListener("pointermove", (event) => {
+  if (!drag || !event.isPrimary || state.mode !== "pages" || isZoomed()) return;
+  const dx = event.clientX - drag.x;
+  const dy = event.clientY - drag.y;
+  if (!drag.moving) {
+    // Wait until the finger clearly moves sideways, so taps stay taps.
+    if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return;
+    drag.moving = true;
     swiped = true;
+    stage.classList.add("dragging");
+    stage.setPointerCapture?.(event.pointerId);
+  }
+  // Past the first page or the end card there is nothing to show, so the pull feels stiff.
+  const pastEdge = (dx > 0 && state.index === 0) || (dx < 0 && state.index === lastIndex());
+  drag.dx = pastEdge ? dx / 3 : dx;
+  stage.style.setProperty("--drag", `${drag.dx}px`);
+});
+
+stage.addEventListener("pointerup", (event) => {
+  if (!drag || !event.isPrimary) return;
+  const { dx, moving, startedAt } = drag;
+  endDrag();
+  if (!moving) return;
+  const flicked = Math.abs(dx) > 30 && event.timeStamp - startedAt < 300;
+  if (flicked || Math.abs(dx) > stage.clientWidth * 0.2) {
     if (dx < 0) next();
     else prev();
   }
 });
+stage.addEventListener("pointercancel", endDrag);
 
 // Taps: in pages mode the left and right edges turn pages; anywhere else shows or hides the bars.
 stage.addEventListener("click", (event) => {
