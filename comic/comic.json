@@ -162,6 +162,17 @@
             { "file": "03.jpg", "text": "The long-haired woman smiles slyly. \"OK, OK... Ale ja budem tá rozumná a Ty tá prdlá. Inak do toho nejdem.\" (OK, OK... But I'll be the sensible one and You the crazy one. Otherwise I'm not doing it.)" },
             { "file": "04.jpg", "text": "The woman with the shaved side frowns, determined. \"Platí.\" (Deal.)" }
           ]
+        },
+        {
+          "number": 12,
+          "title": "Tetovanie v lete?",
+          "folder": "episode-12",
+          "pages": [
+            { "file": "01.jpg", "text": "On a blue background, a reporter with long hair holds out a microphone, mouth open in shock. \"ŠKANDÁL! Tatérka sa nechala tetovať v strede leta! Čo nám k tomu poviete???\" (SCANDAL! A tattoo artist got tattooed in the middle of summer! What do you have to say about it???)" },
+            { "file": "02.jpg", "text": "The tattoo artist, with one side of her head shaved, answers the microphone with a frown. \"Nevidím žiadny problém! Na dovolenke som už bola a do vody aj tak nechodím!\" (I don't see any problem! I've already been on holiday and I don't go into the water anyway!)" },
+            { "file": "03.jpg", "text": "The reporter, wide-eyed, presses on, with a little sun drawn beside the words. \"Takže sa nebojíte slnka, potu a nimi spôsobeného zlého hojenia?\" (So you're not afraid of the sun, sweat and the bad healing they cause?)" },
+            { "file": "04.jpg", "text": "The tattoo artist answers calmly. \"Vôbec. Strach je spôsobený nevedomosťou. Celé leto nosím dlhé voľné oblečenie a som úplne v pohode!\" (Not at all. Fear comes from not knowing. All summer I wear long, loose clothes and I'm completely fine!)" }
+          ]
         }
       ]
     }
