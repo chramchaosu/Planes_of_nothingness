@@ -6,7 +6,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0f0d13">
 <!-- build.ps1 fills in a fingerprint of this version; the app compares it to spot updates. -->
-<meta name="app-build" content="88dc2c8d">
+<meta name="app-build" content="06865f4b">
 <title>Planes of Nothingness</title>
 <!-- Home-screen app setup (used when served from GitHub Pages). -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -327,31 +327,31 @@
   .reader[data-mode="scroll"] .page img { width: 100%; height: auto; }
 
   /* Pages mode: one page at a time, fitted to the screen. */
+  /* The pages sit side by side in a sideways strip that the browser scrolls and snaps,
+     so swiping feels like the phone's own photo gallery. */
   .reader[data-mode="pages"] .stage {
-    overflow: hidden;
-    padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
-    touch-action: pinch-zoom;
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
     user-select: none;
     -webkit-user-select: none;
   }
-  /* The current page sits in place with its neighbours just off screen on either side.
-     --offset is the page's distance from the current one (set by goTo);
-     --drag is how far a finger has pulled the pages sideways (set while swiping). */
-  .reader[data-mode="pages"] .slot { display: none; }
-  .reader[data-mode="pages"] .slot.is-near {
-    display: flex;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: env(safe-area-inset-left, 0px);
-    right: env(safe-area-inset-right, 0px);
+  .reader[data-mode="pages"] .stage::-webkit-scrollbar { display: none; }
+  .reader[data-mode="pages"] .slot {
+    flex: 0 0 100%;
+    height: 100%;
     min-height: 0;
     overflow-y: auto;
-    transform: translateX(calc(var(--offset, 0) * (100% + 24px) + var(--drag, 0px)));
-    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    scroll-snap-align: center;
+    scroll-snap-stop: always; /* a flick turns one page, never skips several */
   }
-  .reader[data-mode="pages"] .stage.dragging .slot,
-  .reader[data-mode="pages"] .stage.instant .slot { transition: none; }
+  .reader[data-mode="pages"] .page {
+    display: flex;
+    padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
+  }
   .reader[data-mode="pages"] .page img {
     width: 100%;
     height: 100%;
@@ -394,9 +394,7 @@
   .notice { max-width: 40ch; margin: 20vh auto 0; padding-inline: 16px; color: var(--mist); text-align: center; }
 
   @media (prefers-reduced-motion: reduce) {
-    .bar, .episode { transition: none; }
-    .reader[data-mode="pages"] .slot.is-near { transition: none; }
-  }
+    .bar, .episode { transition: none; }  }
 </style>
 </head>
 <body>
@@ -650,29 +648,22 @@ function goTo(index, { smooth = true, scroll = true } = {}) {
   if (!state.episode) return;
   state.index = Math.min(Math.max(0, index), lastIndex());
 
-  // Jumps (opening an episode, switching mode, the slider) happen at once; page turns slide.
-  if (!smooth) stage.classList.add("instant");
-  Array.from(slots()).forEach((slot, i) => {
-    const offset = i - state.index;
-    slot.classList.toggle("is-current", offset === 0);
-    slot.classList.toggle("is-near", Math.abs(offset) <= 1);
-    slot.style.setProperty("--offset", String(offset));
-  });
-  if (!smooth) {
-    void stage.offsetWidth; // let the pages settle in their new places before sliding is switched back on
-    stage.classList.remove("instant");
-  }
+  Array.from(slots()).forEach((slot, i) => slot.classList.toggle("is-current", i === state.index));
 
   // Fetch this page and its neighbours now, so turning the page doesn't wait for a download.
   for (const i of [state.index - 1, state.index, state.index + 1]) {
     slots()[i]?.querySelector("img")?.setAttribute("loading", "eager");
   }
 
-  if (scroll && state.mode === "scroll") {
-    stage.scrollTo({
-      top: slots()[state.index].offsetTop,
-      behavior: smooth && !prefersReducedMotion() ? "smooth" : "auto",
-    });
+  // Bring the page into view: down the strip in scroll mode, sideways in pages mode.
+  // Jumps (opening an episode, switching mode, the slider) happen at once; page turns glide.
+  if (scroll) {
+    const slot = slots()[state.index];
+    const behavior = smooth && !prefersReducedMotion() ? "smooth" : "auto";
+    scrollingTo(behavior === "smooth" ? state.index : null);
+    stage.scrollTo(state.mode === "scroll"
+      ? { top: slot.offsetTop, behavior }
+      : { left: slot.offsetLeft, behavior });
   }
 
   updateControls();
@@ -704,73 +695,61 @@ function showChrome(visible) {
 }
 const toggleChrome = () => showChrome(reader.classList.contains("chrome-hidden"));
 
-// In scroll mode, work out which page is in the middle of the screen.
+// While the app itself glides to a page, the pages passed on the way must not count as
+// "the reader is here now" — otherwise quick taps on Next would be lost.
+let glideTarget = null;
+let glideTimer = 0;
+function scrollingTo(index) {
+  glideTarget = index;
+  clearTimeout(glideTimer);
+  // Safety net in case the glide never lands exactly (e.g. the last page is shorter than the screen).
+  if (index !== null) glideTimer = setTimeout(() => { glideTarget = null; }, 1000);
+}
+// A finger or mouse wheel takes over from any glide in progress.
+for (const type of ["touchstart", "wheel", "pointerdown"]) {
+  stage.addEventListener(type, () => scrollingTo(null), { passive: true });
+}
+
+/** The page the reader is looking at: the one in the middle of the screen. */
+function visibleIndex() {
+  let index = 0;
+  if (state.mode === "scroll") {
+    const middle = stage.scrollTop + stage.clientHeight / 2;
+    Array.from(slots()).forEach((slot, i) => { if (slot.offsetTop <= middle) index = i; });
+  } else {
+    const middle = stage.scrollLeft + stage.clientWidth / 2;
+    Array.from(slots()).forEach((slot, i) => { if (slot.offsetLeft <= middle) index = i; });
+  }
+  return index;
+}
+
+// Keep the page counter and slider in step as the reader scrolls or swipes.
 // (The bars stay until the reader taps; hiding them by themselves would make the strip jump.)
 let scrollFrame = 0;
 stage.addEventListener("scroll", () => {
-  if (state.mode !== "scroll" || scrollFrame) return;
+  if (scrollFrame) return;
   scrollFrame = requestAnimationFrame(() => {
     scrollFrame = 0;
-    const middle = stage.scrollTop + stage.clientHeight / 2;
-    let index = 0;
-    Array.from(slots()).forEach((slot, i) => { if (slot.offsetTop <= middle) index = i; });
+    const index = visibleIndex();
+    if (glideTarget !== null) {
+      if (index !== glideTarget) return;
+      scrollingTo(null);
+    }
     if (index !== state.index) goTo(index, { scroll: false });
   });
 }, { passive: true });
 
-// Pages mode: the pages follow a finger sideways; letting go far enough (or with a quick flick)
-// turns the page, otherwise it slides back. Ignored while pinch-zoomed.
-let drag = null;
-let swiped = false;
+// Turning the phone changes the page width; keep the same page in view.
+window.addEventListener("resize", () => {
+  if (!reader.hidden && state.mode === "pages") goTo(state.index, { smooth: false });
+});
+
 const isZoomed = () => (window.visualViewport?.scale ?? 1) > 1.05;
 
-function endDrag() {
-  drag = null;
-  stage.classList.remove("dragging");
-  stage.style.removeProperty("--drag");
-}
-
-stage.addEventListener("pointerdown", (event) => {
-  swiped = false;
-  // A second finger means a pinch, not a swipe.
-  if (!event.isPrimary) return endDrag();
-  drag = { x: event.clientX, y: event.clientY, startedAt: event.timeStamp, dx: 0, moving: false };
-});
-
-stage.addEventListener("pointermove", (event) => {
-  if (!drag || !event.isPrimary || state.mode !== "pages" || isZoomed()) return;
-  const dx = event.clientX - drag.x;
-  const dy = event.clientY - drag.y;
-  if (!drag.moving) {
-    // Wait until the finger clearly moves sideways, so taps stay taps.
-    if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return;
-    drag.moving = true;
-    swiped = true;
-    stage.classList.add("dragging");
-    stage.setPointerCapture?.(event.pointerId);
-  }
-  // Past the first page or the end card there is nothing to show, so the pull feels stiff.
-  const pastEdge = (dx > 0 && state.index === 0) || (dx < 0 && state.index === lastIndex());
-  drag.dx = pastEdge ? dx / 3 : dx;
-  stage.style.setProperty("--drag", `${drag.dx}px`);
-});
-
-stage.addEventListener("pointerup", (event) => {
-  if (!drag || !event.isPrimary) return;
-  const { dx, moving, startedAt } = drag;
-  endDrag();
-  if (!moving) return;
-  const flicked = Math.abs(dx) > 30 && event.timeStamp - startedAt < 300;
-  if (flicked || Math.abs(dx) > stage.clientWidth * 0.2) {
-    if (dx < 0) next();
-    else prev();
-  }
-});
-stage.addEventListener("pointercancel", endDrag);
-
 // Taps: in pages mode the left and right edges turn pages; anywhere else shows or hides the bars.
+// (A swipe scrolls instead, and the browser sends no tap for it.)
 stage.addEventListener("click", (event) => {
-  if (swiped || event.target.closest("a, button")) return;
+  if (event.target.closest("a, button")) return;
   if (state.mode === "pages" && state.index < lastIndex() && !isZoomed()) {
     const { left, width } = stage.getBoundingClientRect();
     const x = (event.clientX - left) / width;
