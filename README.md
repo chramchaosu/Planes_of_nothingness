@@ -14,7 +14,8 @@ background, so the whole comic works offline.
 - **Scroll** mode shows an episode as one long strip.
 - **Pages** mode shows one page at a time. Swipe, tap the left/right edge, or use
   the arrow keys. Tap the middle to hide the bars.
-- The last page you read and your preferred mode are remembered on each device.
+- Episodes always open on their first page. Each device remembers the preferred
+  mode and which episodes were read to the end.
 
 ## Project layout
 

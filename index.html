@@ -394,7 +394,7 @@
       <h2 id="how-to-title">How to read</h2>
       <p><strong>Scroll</strong> shows the whole episode as one long strip. Just keep scrolling down.</p>
       <p><strong>Pages</strong> shows one page at a time. Swipe, or tap the right or left edge to turn the page. Tap the middle to hide the bars.</p>
-      <p>Your place is remembered, so you can stop and come back later.</p>
+      <p>Every episode opens on its first page. Episodes you've read to the end are marked as finished.</p>
     </section>
   </div>
 </main>
@@ -496,10 +496,9 @@ const episodesById = new Map(episodes.map((episode) => [episode.id, episode]));
 // ---------- Home ----------
 
 function statusText(episode) {
-  const saved = store.get(progressKey(episode), 0);
-  if (saved >= episode.pages.length) return "Finished · read again";
-  if (saved > 0) return `Continue from page ${saved + 1}`;
-  return "Start reading";
+  // Only used to mark episodes read to the end; opening always starts at page 1.
+  const furthest = store.get(progressKey(episode), 0);
+  return furthest >= episode.pages.length ? "Finished · read again" : "Start reading";
 }
 
 function renderHome() {
@@ -565,9 +564,8 @@ const slots = () => stage.children;
 
 function openEpisode(episode) {
   state.episode = episode;
-  const saved = store.get(progressKey(episode), 0);
-  // A finished episode reopens on its last page rather than the end card.
-  state.index = Math.min(Math.max(0, saved), episode.pages.length - 1);
+  // Episodes always open on their first page.
+  state.index = 0;
 
   $("reader-title").textContent = episode.label;
   document.title = `${comic.title} · ${episode.label}`;
@@ -645,7 +643,8 @@ function goTo(index, { smooth = true, scroll = true } = {}) {
   }
 
   updateControls();
-  store.set(progressKey(state.episode), state.index);
+  const key = progressKey(state.episode);
+  if (state.index > store.get(key, 0)) store.set(key, state.index);
 }
 
 function updateControls() {
