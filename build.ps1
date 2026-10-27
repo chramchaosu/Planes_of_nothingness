@@ -1,0 +1,94 @@
+<#
+.SYNOPSIS
+    Builds planes-of-nothingness.html, the single file you copy to a phone.
+
+.DESCRIPTION
+    Reads comic/comic.json, embeds every page image listed there directly into
+    src/reader.html (as base64 data URIs), and writes one self-contained HTML
+    file that works offline with no other files next to it.
+
+    Works in Windows PowerShell 5.1 and PowerShell 7+.
+
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File .\build.ps1
+#>
+[CmdletBinding()]
+param(
+    [string]$OutFile = (Join-Path $PSScriptRoot 'planes-of-nothingness.html')
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Drawing
+
+$comicDir     = Join-Path $PSScriptRoot 'comic'
+$templatePath = Join-Path $PSScriptRoot 'src/reader.html'
+$placeholder  = '__COMIC_DATA__'
+
+$mimeTypes = @{ '.jpg' = 'image/jpeg'; '.jpeg' = 'image/jpeg'; '.png' = 'image/png'; '.webp' = 'image/webp' }
+
+function Get-ImageSize([string]$Path) {
+    # Width and height let the reader reserve space before an image is drawn.
+    $image = [System.Drawing.Image]::FromFile($Path)
+    try { return @{ width = $image.Width; height = $image.Height } }
+    finally { $image.Dispose() }
+}
+
+$manifest = Get-Content (Join-Path $comicDir 'comic.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+
+# Image data is large, so it is not passed through ConvertTo-Json (Windows PowerShell
+# limits its size). Each page gets a short token instead, swapped for the data afterwards.
+$imageData = [System.Collections.Generic.List[string]]::new()
+
+$seasons = @(foreach ($season in $manifest.seasons) {
+    $episodes = @(foreach ($episode in $season.episodes) {
+        $pages = @(foreach ($page in $episode.pages) {
+            $path = Join-Path $comicDir (Join-Path $season.folder (Join-Path $episode.folder $page.file))
+            if (-not (Test-Path -LiteralPath $path)) {
+                throw "Page image not found: $path (listed in comic/comic.json)"
+            }
+            $extension = [IO.Path]::GetExtension($path).ToLowerInvariant()
+            if (-not $mimeTypes.ContainsKey($extension)) {
+                throw "Unsupported image type '$extension' for $path. Use .jpg, .png or .webp."
+            }
+
+            $bytes = [IO.File]::ReadAllBytes($path)
+            $imageData.Add("data:$($mimeTypes[$extension]);base64,$([Convert]::ToBase64String($bytes))")
+            $size = Get-ImageSize $path
+
+            [ordered]@{
+                src    = "__IMAGE_$($imageData.Count - 1)__"
+                text   = $page.text
+                width  = $size.width
+                height = $size.height
+            }
+        })
+
+        $entry = [ordered]@{ number = $episode.number; pages = $pages }
+        if ($episode.PSObject.Properties['title']) { $entry.title = $episode.title }
+        $entry
+    })
+
+    [ordered]@{ number = $season.number; episodes = $episodes }
+})
+
+$json = ConvertTo-Json -InputObject ([ordered]@{ title = $manifest.title; seasons = $seasons }) -Depth 10 -Compress
+
+# Base64 never contains quotes or backslashes, so it can go straight into the JSON.
+$builder = [System.Text.StringBuilder]::new($json)
+for ($i = 0; $i -lt $imageData.Count; $i++) {
+    [void]$builder.Replace("__IMAGE_$($i)__", $imageData[$i])
+}
+# "</" inside a <script> block could end it early; "<\/" means the same in JSON.
+$json = $builder.ToString().Replace('</', '<\/')
+
+$template = [IO.File]::ReadAllText($templatePath)
+if (-not $template.Contains($placeholder)) {
+    throw "The placeholder $placeholder is missing from src/reader.html."
+}
+$html = $template.Replace($placeholder, $json)
+
+[IO.File]::WriteAllText($OutFile, $html, [System.Text.UTF8Encoding]::new($false))
+
+$sizeMb = [math]::Round((Get-Item -LiteralPath $OutFile).Length / 1MB, 2)
+Write-Host "Built $OutFile ($($imageData.Count) pages, $sizeMb MB)"

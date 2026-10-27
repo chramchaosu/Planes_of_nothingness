@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0f0d13">
+<title>Planes of Nothingness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Shadows+Into+Light+Two&display=swap">
+<style>
+  /* Layout: a dark gallery wall. Home is a single column shelf of episodes;
+     the reader is a full-screen stage with slim bars that slide away. */
+  :root {
+    color-scheme: dark;
+    --ink: #0f0d13;      /* page ground, close to the black of the panel borders */
+    --ash: #1c1922;      /* raised surfaces */
+    --smoke: #2d2935;    /* hairlines */
+    --paper: #f2eff4;    /* caption-cloud white, main text */
+    --mist: #a49eae;     /* secondary text */
+    --pit: #e070d2;      /* accent, the magenta of the Pit */
+    --font-hand: "Shadows Into Light Two", "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+    --font-ui: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --bar-h: 56px;
+    --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+    --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+    padding: 0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font: 400 1rem/1.5 var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  img { display: block; max-width: 100%; }
+  [hidden] { display: none !important; }
+  button, input { font: inherit; color: inherit; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--pit); outline-offset: 2px; }
+
+  /* ---------- Home ---------- */
+
+  .home { min-height: 100%; padding-bottom: max(48px, env(safe-area-inset-bottom, 0px)); }
+
+  .cover {
+    position: relative;
+    isolation: isolate;
+    height: min(64vh, 540px);
+    overflow: hidden;
+  }
+  .cover-art {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+  .cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(to bottom,
+      rgb(15 13 19 / 0.1) 0%, rgb(15 13 19 / 0.3) 45%, var(--ink) 100%);
+  }
+  .cover-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 760px;
+    margin-inline: auto;
+    padding-left: var(--gutter-l);
+    padding-right: var(--gutter-r);
+    padding-bottom: 20px;
+  }
+  .eyebrow {
+    margin: 0;
+    color: var(--mist);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .title {
+    margin: 0.1em 0 0;
+    font: 400 clamp(2.9rem, 12vw, 5rem)/0.95 var(--font-hand);
+    text-wrap: balance;
+    text-shadow: 0 2px 18px rgb(0 0 0 / 0.6);
+  }
+
+  .shelf {
+    display: grid;
+    gap: 40px;
+    max-width: 760px;
+    margin-inline: auto;
+    padding-left: var(--gutter-l);
+    padding-right: var(--gutter-r);
+    padding-block: 12px 0;
+  }
+  .season { display: grid; gap: 14px; }
+  .season-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--smoke);
+  }
+  .season-head h2 {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .season-head span { color: var(--mist); font-size: 0.85rem; }
+
+  .episodes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .episode {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border: 1px solid var(--smoke);
+    border-radius: 14px;
+    background: var(--ash);
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+  .episode:hover { border-color: var(--pit); }
+  .episode-thumb {
+    width: 88px;
+    aspect-ratio: 726 / 1047;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  .episode-body { display: grid; gap: 2px; min-width: 0; }
+  .episode-name { margin: 0; font: 400 1.9rem/1.1 var(--font-hand); }
+  .episode-meta { color: var(--mist); font-size: 0.9rem; }
+  .episode-status { color: var(--pit); font-size: 0.9rem; font-weight: 700; }
+  .episode-arrow { width: 22px; height: 22px; color: var(--mist); }
+
+  .how-to {
+    display: grid;
+    gap: 6px;
+    color: var(--mist);
+    font-size: 0.9rem;
+  }
+  .how-to h2 {
+    margin: 0 0 4px;
+    color: var(--paper);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .how-to p { margin: 0; max-width: 60ch; }
+  .how-to strong { color: var(--paper); }
+
+  /* ---------- Reader ---------- */
+
+  .reader { position: fixed; inset: 0; background: var(--ink); }
+
+  .bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: var(--gutter-l);
+    padding-right: var(--gutter-r);
+    background: rgb(15 13 19 / 0.88);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: transform 0.25s ease;
+  }
+  .bar-top {
+    top: 0;
+    height: calc(var(--bar-h) + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+    border-bottom: 1px solid var(--smoke);
+  }
+  .bar-bottom {
+    bottom: 0;
+    height: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-top: 1px solid var(--smoke);
+  }
+  .reader.chrome-hidden .bar-top { transform: translateY(-100%); }
+  .reader.chrome-hidden .bar-bottom { transform: translateY(100%); }
+
+  .bar-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+  }
+  .icon-btn:hover { background: var(--smoke); }
+  .icon-btn:disabled { opacity: 0.3; cursor: default; background: transparent; }
+  .icon-btn svg { width: 22px; height: 22px; }
+
+  .modes {
+    display: flex;
+    flex: none;
+    padding: 3px;
+    border: 1px solid var(--smoke);
+    border-radius: 999px;
+  }
+  .modes button {
+    padding: 4px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--mist);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .modes button[aria-pressed="true"] { background: var(--paper); color: var(--ink); }
+
+  .page-count {
+    flex: none;
+    min-width: 4.5em;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .slider { flex: 1; min-width: 0; accent-color: var(--pit); }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+    overscroll-behavior: contain;
+  }
+
+  /* Scroll mode: one long strip of pages, like a webtoon. */
+  .reader[data-mode="scroll"] .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    overflow-y: auto;
+    padding-top: calc(var(--bar-h) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px));
+    scroll-padding-top: calc(var(--bar-h) + env(safe-area-inset-top, 0px));
+  }
+  .reader[data-mode="scroll"] .page { width: min(100%, 760px); flex: none; }
+  .reader[data-mode="scroll"] .page img { width: 100%; height: auto; }
+
+  /* Pages mode: one page at a time, fitted to the screen. */
+  .reader[data-mode="pages"] .stage {
+    overflow: hidden;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+             env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    touch-action: pinch-zoom;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .reader[data-mode="pages"] .slot { display: none; }
+  .reader[data-mode="pages"] .slot.is-current {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    animation: fade-in 0.2s ease;
+  }
+  .reader[data-mode="pages"] .page img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    -webkit-user-drag: none;
+  }
+  @keyframes fade-in { from { opacity: 0; } }
+
+  .page { margin: 0; }
+
+  .end-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+    min-height: 60vh;
+    padding-left: var(--gutter-l);
+    padding-right: var(--gutter-r);
+    padding-block: 48px;
+    text-align: center;
+  }
+  .end-card h2 { margin: 0; font: 400 clamp(2.4rem, 9vw, 3.6rem)/1 var(--font-hand); text-wrap: balance; }
+  .end-card p { margin: 0; color: var(--mist); }
+  .end-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
+
+  .btn {
+    padding: 10px 18px;
+    border: 1px solid var(--smoke);
+    border-radius: 999px;
+    background: var(--ash);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--pit); }
+  .btn-primary { border-color: var(--paper); background: var(--paper); color: var(--ink); }
+  .btn-primary:hover { border-color: var(--pit); background: var(--pit); }
+
+  .notice { max-width: 40ch; margin: 20vh auto 0; padding-inline: 16px; color: var(--mist); text-align: center; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar, .episode { transition: none; }
+    .reader[data-mode="pages"] .slot.is-current { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<main id="home" class="home" hidden>
+  <header class="cover">
+    <img id="cover-art" class="cover-art" alt="">
+    <div class="cover-text">
+      <p class="eyebrow">A webcomic</p>
+      <h1 id="comic-title" class="title"></h1>
+    </div>
+  </header>
+
+  <div class="shelf">
+    <div id="seasons"></div>
+
+    <section class="how-to" aria-labelledby="how-to-title">
+      <h2 id="how-to-title">How to read</h2>
+      <p><strong>Scroll</strong> shows the whole episode as one long strip. Just keep scrolling down.</p>
+      <p><strong>Pages</strong> shows one page at a time. Swipe, or tap the right or left edge to turn the page. Tap the middle to hide the bars.</p>
+      <p>Your place is remembered, so you can stop and come back later.</p>
+    </section>
+  </div>
+</main>
+
+<div id="reader" class="reader" data-mode="scroll" hidden>
+  <header class="bar bar-top">
+    <a class="icon-btn" href="#home" aria-label="Back to episodes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <div id="reader-title" class="bar-title"></div>
+    <div class="modes" role="group" aria-label="Reading mode">
+      <button id="mode-scroll" type="button" data-mode="scroll" aria-pressed="true">Scroll</button>
+      <button id="mode-pages" type="button" data-mode="pages" aria-pressed="false">Pages</button>
+    </div>
+  </header>
+
+  <div id="stage" class="stage"></div>
+
+  <footer class="bar bar-bottom">
+    <button id="prev" class="icon-btn" type="button" aria-label="Previous page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <input id="page-slider" class="slider" type="range" min="1" max="1" value="1" aria-label="Jump to page">
+    <span id="page-count" class="page-count" aria-live="polite"></span>
+    <button id="next" class="icon-btn" type="button" aria-label="Next page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </footer>
+</div>
+
+<!-- build.ps1 replaces the placeholder below with the comic's pages. -->
+<script id="comic-data" type="application/json">__COMIC_DATA__</script>
+
+<script>
+"use strict";
+
+// ---------- Saved preferences (per device, optional) ----------
+
+const store = {
+  get(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // Storage can be blocked (private mode). Reading still works, it just isn't remembered.
+    }
+  },
+};
+
+const STORAGE_PREFIX = "planes-of-nothingness:";
+const progressKey = (episode) => `${STORAGE_PREFIX}progress:${episode.id}`;
+const MODE_KEY = `${STORAGE_PREFIX}mode`;
+
+// ---------- Small DOM helper ----------
+
+/** Creates an element: el("a", { href: "#x", className: "y" }, child1, "text"). */
+function el(tag, props = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [name, value] of Object.entries(props)) {
+    if (name in node) node[name] = value;
+    else node.setAttribute(name, value);
+  }
+  node.append(...children);
+  return node;
+}
+
+const $ = (id) => document.getElementById(id);
+
+// ---------- Comic data ----------
+
+let comic;
+try {
+  comic = JSON.parse($("comic-data").textContent);
+} catch {
+  document.body.replaceChildren(el("p", { className: "notice" },
+    "This is the template. Run build.ps1 to create the readable comic file."));
+  throw new Error("Comic data missing: open the built file, not src/reader.html.");
+}
+
+/** Every episode in reading order, with a short id like "s1e1" used in the address. */
+const episodes = comic.seasons.flatMap((season) =>
+  season.episodes.map((episode) => ({
+    ...episode,
+    season: season.number,
+    id: `s${season.number}e${episode.number}`,
+    label: `Season ${season.number} · Episode ${episode.number}`,
+  })),
+);
+episodes.forEach((episode, i) => { episode.next = episodes[i + 1] ?? null; });
+const episodesById = new Map(episodes.map((episode) => [episode.id, episode]));
+
+// ---------- Home ----------
+
+function statusText(episode) {
+  const saved = store.get(progressKey(episode), 0);
+  if (saved >= episode.pages.length) return "Finished · read again";
+  if (saved > 0) return `Continue from page ${saved + 1}`;
+  return "Start reading";
+}
+
+function renderHome() {
+  $("comic-title").textContent = comic.title;
+  $("cover-art").src = episodes[0].pages[0].src;
+
+  $("seasons").replaceChildren(...comic.seasons.map((season) => {
+    const seasonEpisodes = episodes.filter((episode) => episode.season === season.number);
+    const count = seasonEpisodes.length;
+    return el("section", { className: "season" },
+      el("div", { className: "season-head" },
+        el("h2", {}, `Season ${season.number}`),
+        el("span", {}, `${count} ${count === 1 ? "episode" : "episodes"}`),
+      ),
+      el("ol", { className: "episodes" }, ...seasonEpisodes.map((episode) =>
+        el("li", {},
+          el("a", { className: "episode", href: `#${episode.id}` },
+            el("img", {
+              className: "episode-thumb",
+              src: episode.pages[0].src,
+              alt: "",
+              width: episode.pages[0].width,
+              height: episode.pages[0].height,
+            }),
+            el("div", { className: "episode-body" },
+              el("h3", { className: "episode-name" }, episode.title ?? `Episode ${episode.number}`),
+              el("span", { className: "episode-meta" }, `${episode.pages.length} pages`),
+              el("span", { className: "episode-status" }, statusText(episode)),
+            ),
+            chevron(),
+          ),
+        ),
+      )),
+    );
+  }));
+}
+
+function chevron() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("class", "episode-arrow");
+  svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = '<path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+  return svg;
+}
+
+// ---------- Reader ----------
+
+const reader = $("reader");
+const stage = $("stage");
+const slider = $("page-slider");
+
+const state = {
+  episode: null,
+  index: 0, // 0..pages.length; the last index is the "end of episode" card
+  mode: store.get(MODE_KEY, "scroll") === "pages" ? "pages" : "scroll",
+};
+
+const prefersReducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const lastIndex = () => state.episode.pages.length;
+const slots = () => stage.children;
+
+function openEpisode(episode) {
+  state.episode = episode;
+  const saved = store.get(progressKey(episode), 0);
+  // A finished episode reopens on its last page rather than the end card.
+  state.index = Math.min(Math.max(0, saved), episode.pages.length - 1);
+
+  $("reader-title").textContent = episode.label;
+  document.title = `${comic.title} · ${episode.label}`;
+  slider.max = String(episode.pages.length);
+
+  stage.replaceChildren(
+    ...episode.pages.map((page, i) =>
+      el("figure", { className: "slot page" },
+        el("img", {
+          src: page.src,
+          alt: `Page ${i + 1}: ${page.text}`,
+          width: page.width,
+          height: page.height,
+          decoding: "async",
+          draggable: false,
+        }),
+      ),
+    ),
+    renderEndCard(episode),
+  );
+
+  $("home").hidden = true;
+  reader.hidden = false;
+  showChrome(true);
+  setMode(state.mode);
+}
+
+function renderEndCard(episode) {
+  const actions = el("div", { className: "end-actions" });
+  if (episode.next) {
+    actions.append(el("a", { className: "btn btn-primary", href: `#${episode.next.id}` },
+      `Next: Episode ${episode.next.number}`));
+  }
+  actions.append(
+    el("a", { className: "btn", href: "#home" }, "Back to episodes"),
+    el("button", { className: "btn", type: "button", onclick: () => goTo(0) }, "Read from the start"),
+  );
+  return el("section", { className: "slot end-card" },
+    el("h2", {}, `End of Episode ${episode.number}`),
+    el("p", {}, episode.next ? "The story continues in the next episode." : "That's every page so far."),
+    actions,
+  );
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  store.set(MODE_KEY, mode);
+  reader.dataset.mode = mode;
+  for (const button of document.querySelectorAll(".modes button")) {
+    button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+  }
+  goTo(state.index, { smooth: false });
+}
+
+/** Moves to a page (or the end card) and keeps every part of the screen in sync. */
+function goTo(index, { smooth = true, scroll = true } = {}) {
+  if (!state.episode) return;
+  state.index = Math.min(Math.max(0, index), lastIndex());
+
+  Array.from(slots()).forEach((slot, i) => slot.classList.toggle("is-current", i === state.index));
+
+  if (scroll && state.mode === "scroll") {
+    // The top padding keeps the page clear of the top bar.
+    const topPadding = parseFloat(getComputedStyle(stage).paddingTop) || 0;
+    stage.scrollTo({
+      top: slots()[state.index].offsetTop - topPadding,
+      behavior: smooth && !prefersReducedMotion() ? "smooth" : "auto",
+    });
+  }
+
+  updateControls();
+  store.set(progressKey(state.episode), state.index);
+}
+
+function updateControls() {
+  const total = state.episode.pages.length;
+  const atEnd = state.index >= total;
+  $("page-count").textContent = atEnd ? "The end" : `${state.index + 1} / ${total}`;
+  slider.value = String(Math.min(state.index + 1, total));
+  $("prev").disabled = state.index === 0;
+  $("next").disabled = atEnd;
+  if (atEnd) showChrome(true);
+}
+
+const next = () => goTo(state.index + 1);
+const prev = () => goTo(state.index - 1);
+
+function showChrome(visible) {
+  reader.classList.toggle("chrome-hidden", !visible);
+}
+const toggleChrome = () => showChrome(reader.classList.contains("chrome-hidden"));
+
+// In scroll mode, work out which page is in the middle of the screen,
+// and slide the bars away while scrolling down so the art gets the full screen.
+let lastScrollTop = 0;
+let scrollFrame = 0;
+stage.addEventListener("scroll", () => {
+  if (state.mode !== "scroll" || scrollFrame) return;
+  scrollFrame = requestAnimationFrame(() => {
+    scrollFrame = 0;
+    const middle = stage.scrollTop + stage.clientHeight / 2;
+    let index = 0;
+    Array.from(slots()).forEach((slot, i) => { if (slot.offsetTop <= middle) index = i; });
+    if (index !== state.index) goTo(index, { scroll: false });
+
+    const delta = stage.scrollTop - lastScrollTop;
+    if (delta > 12 && stage.scrollTop > 80) showChrome(false);
+    else if (delta < -12) showChrome(true);
+    lastScrollTop = stage.scrollTop;
+  });
+}, { passive: true });
+
+// Pages mode: swipe left or right to turn the page. Ignored while pinch-zoomed.
+let swipeStart = null;
+let swiped = false;
+const isZoomed = () => (window.visualViewport?.scale ?? 1) > 1.05;
+
+stage.addEventListener("pointerdown", (event) => {
+  swiped = false;
+  // A second finger means a pinch, not a swipe.
+  swipeStart = event.isPrimary ? { x: event.clientX, y: event.clientY } : null;
+});
+stage.addEventListener("pointercancel", () => { swipeStart = null; });
+stage.addEventListener("pointerup", (event) => {
+  if (!swipeStart || !event.isPrimary || state.mode !== "pages" || isZoomed()) return;
+  const dx = event.clientX - swipeStart.x;
+  const dy = event.clientY - swipeStart.y;
+  swipeStart = null;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    swiped = true;
+    if (dx < 0) next();
+    else prev();
+  }
+});
+
+// Taps: in pages mode the left and right edges turn pages; anywhere else shows or hides the bars.
+stage.addEventListener("click", (event) => {
+  if (swiped || event.target.closest("a, button")) return;
+  if (state.mode === "pages" && state.index < lastIndex() && !isZoomed()) {
+    const { left, width } = stage.getBoundingClientRect();
+    const x = (event.clientX - left) / width;
+    if (x < 0.3) return prev();
+    if (x > 0.7) return next();
+  }
+  toggleChrome();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (reader.hidden || event.altKey || event.ctrlKey || event.metaKey) return;
+  if (event.target === slider) return; // the slider handles its own arrow keys
+  const turnsPages = state.mode === "pages";
+  switch (event.key) {
+    case "ArrowRight":
+      event.preventDefault();
+      next();
+      break;
+    case "ArrowLeft":
+      event.preventDefault();
+      prev();
+      break;
+    case "PageDown":
+    case " ":
+      if (turnsPages) { event.preventDefault(); next(); }
+      break;
+    case "PageUp":
+      if (turnsPages) { event.preventDefault(); prev(); }
+      break;
+    case "Escape":
+      location.hash = "home";
+      break;
+  }
+});
+
+$("prev").addEventListener("click", prev);
+$("next").addEventListener("click", next);
+slider.addEventListener("input", () => goTo(Number(slider.value) - 1, { smooth: false }));
+for (const button of document.querySelectorAll(".modes button")) {
+  button.addEventListener("click", () => setMode(button.dataset.mode));
+}
+
+// ---------- Navigation: #home or an episode id like #s1e1 ----------
+
+function showHome() {
+  state.episode = null;
+  reader.hidden = true;
+  stage.replaceChildren();
+  document.title = comic.title;
+  renderHome();
+  $("home").hidden = false;
+  window.scrollTo(0, 0);
+}
+
+function route() {
+  const episode = episodesById.get(location.hash.slice(1));
+  if (episode) openEpisode(episode);
+  else showHome();
+}
+
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>

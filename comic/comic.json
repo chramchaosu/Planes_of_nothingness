@@ -1,0 +1,33 @@
+{
+  "title": "Planes of Nothingness",
+  "seasons": [
+    {
+      "number": 1,
+      "folder": "season-01",
+      "episodes": [
+        {
+          "number": 1,
+          "folder": "episode-01",
+          "pages": [
+            { "file": "01.jpg", "text": "When you know that there is a parasite in your head" },
+            { "file": "02.jpg", "text": "So you search it" },
+            { "file": "03.jpg", "text": "Every open space" },
+            { "file": "04.jpg", "text": "Every hidden corner" },
+            { "file": "05.jpg", "text": "And after finding nothing, you know that there is the only way" },
+            { "file": "06.jpg", "text": "To burn it all to the ground." },
+            { "file": "07.jpg", "text": "And in the burned and barren land there is only one thing left" },
+            { "file": "08.jpg", "text": "The Pit" },
+            { "file": "09.jpg", "text": "The Pit will strip you of everything that is not You" },
+            { "file": "10.jpg", "text": "You enter the pit to get rid of It." },
+            { "file": "11.jpg", "text": "And when you finally emerge after long and confusing time" },
+            { "file": "12.jpg", "text": "You are just the same as before" },
+            { "file": "13.jpg", "text": "But before entering uncertainty of the Planes of Nothingness" },
+            { "file": "14.jpg", "text": "You consider everything only to avoid it" },
+            { "file": "15.jpg", "text": "Even the possibility that the parasite" },
+            { "file": "16.jpg", "text": "Is you" }
+          ]
+        }
+      ]
+    }
+  ]
+}
